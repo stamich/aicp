@@ -1,0 +1,9 @@
+[package]
+name="aicp-assurance"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+rust-version.workspace=true
+
+[dependencies]
+aicp-core={path="../aicp-core"}

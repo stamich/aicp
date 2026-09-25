@@ -1,0 +1,11 @@
+[package]
+name="aicp-adapter-mock"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+rust-version.workspace=true
+
+[dependencies]
+aicp-core={path="../aicp-core"}
+aicp-capability={path="../aicp-capability"}
+aicp-adapter-api={path="../aicp-adapter-api"}

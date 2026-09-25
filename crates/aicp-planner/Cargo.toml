@@ -1,0 +1,12 @@
+[package]
+name="aicp-planner"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+rust-version.workspace=true
+
+[dependencies]
+aicp-core={path="../aicp-core"}
+aicp-capability={path="../aicp-capability"}
+thiserror.workspace=true
+uuid.workspace=true

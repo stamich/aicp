@@ -1,0 +1,16 @@
+[package]
+name="aicp-demo"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+rust-version.workspace=true
+
+[dependencies]
+anyhow.workspace=true
+aicp-intent={path="../aicp-intent"}
+aicp-capability={path="../aicp-capability"}
+aicp-planner={path="../aicp-planner"}
+aicp-adapter-mock={path="../aicp-adapter-mock"}
+aicp-executor={path="../aicp-executor"}
+aicp-assurance={path="../aicp-assurance"}
+aicp-core={path="../aicp-core"}

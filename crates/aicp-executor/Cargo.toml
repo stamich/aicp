@@ -1,0 +1,16 @@
+[package]
+name="aicp-executor"
+version.workspace=true
+edition.workspace=true
+license.workspace=true
+rust-version.workspace=true
+
+[dependencies]
+aicp-core={path="../aicp-core"}
+aicp-adapter-api={path="../aicp-adapter-api"}
+thiserror.workspace=true
+
+[dev-dependencies]
+aicp-adapter-mock={path="../aicp-adapter-mock"}
+aicp-capability={path="../aicp-capability"}
+uuid.workspace=true

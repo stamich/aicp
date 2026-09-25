@@ -1,0 +1,20 @@
+apiVersion: aicp/v1alpha1
+kind: DataIntent
+metadata:
+  name: low-latency-orders
+spec:
+  target:
+    dataset: orders
+  goals:
+    p99LatencyMs:
+      max: 10
+    availabilityPercent:
+      min: 99.99
+  constraints:
+    durability: strong
+    residency:
+      - EU
+  preferences:
+    minimize:
+      - cost
+      - latency

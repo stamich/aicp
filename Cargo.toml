@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/aicp-core",
+  "crates/aicp-intent",
+  "crates/aicp-capability",
+  "crates/aicp-planner",
+  "crates/aicp-adapter-api",
+  "crates/aicp-adapter-mock",
+  "crates/aicp-executor",
+  "crates/aicp-assurance",
+  "crates/aicp-cli",
+  "crates/aicp-demo",
+  "crates/aicp-benchmarks",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["AICP contributors"]
+rust-version = "1.76"
+
+[workspace.dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+thiserror = "1.0"
+uuid = { version = "1.10", features = ["v4", "serde"] }
