@@ -1,12 +1,10 @@
 use thiserror::Error;
 
-/// Errors produced while parsing or validating an intent document.
+/// Errors produced while parsing or validating an intent.
 #[derive(Debug, Error)]
 pub enum IntentError {
-    /// YAML syntax or deserialization failure.
-    #[error("invalid YAML intent: {0}")]
-    Parse(#[from] serde_yaml::Error),
-    /// Semantic validation failure.
+    #[error("invalid YAML: {0}")]
+    Yaml(#[from] serde_yaml::Error),
     #[error("invalid intent: {0}")]
-    Validation(String),
+    Semantic(String),
 }

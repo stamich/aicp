@@ -1,25 +1,16 @@
-use crate::{AdapterError, AppliedAction};
+use crate::error::AdapterError;
 use aicp_capability::EngineCapabilities;
 use aicp_core::{EngineKind, PlanAction};
+use aicp_plan::{ActionEstimate, ActionValidation, ExecutionReceipt};
+use aicp_state::ObservedState;
 
-/// Abstraction implemented by every AICP execution target.
-pub trait IntentTarget: Send + Sync {
-    /// Returns the engine represented by this adapter.
-    fn engine(&self) -> EngineKind;
-
-    /// Returns capabilities currently supported by the engine.
-    fn capabilities(&self) -> EngineCapabilities;
-
-    /// Validates an action without changing engine state.
-    fn validate(&self, action: &PlanAction) -> Result<(), AdapterError>;
-
-    /// Applies an action and returns a rollback/audit token.
-    fn execute(&self, action: &PlanAction) -> Result<AppliedAction, AdapterError>;
-
-    /// Performs best-effort rollback for a previously applied action.
-    fn rollback(
-        &self,
-        action: &PlanAction,
-        applied: &AppliedAction,
-    ) -> Result<(), AdapterError>;
+/// Contract between the control plane and one execution engine.
+pub trait IntentTarget {
+    fn kind(&self) -> EngineKind;
+    fn capabilities(&self) -> Result<EngineCapabilities, AdapterError>;
+    fn observe(&self) -> Result<ObservedState, AdapterError>;
+    fn validate(&self, action: &PlanAction) -> Result<ActionValidation, AdapterError>;
+    fn estimate(&self, action: &PlanAction) -> Result<ActionEstimate, AdapterError>;
+    fn execute(&mut self, plan_id: &str, action: &PlanAction) -> Result<ExecutionReceipt, AdapterError>;
+    fn rollback(&mut self, receipt: &ExecutionReceipt) -> Result<ExecutionReceipt, AdapterError>;
 }

@@ -1,3 +1,3 @@
 pub mod fixtures;
 
-pub use fixtures::{benchmark_registry, benchmark_telemetry};
+pub use fixtures::{sample_intent, sample_observed_state};

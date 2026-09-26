@@ -1,36 +1,94 @@
-./.gitignore
-./CHANGELOG.md
-./Cargo.toml
-./LICENSE
-./MANIFEST.txt
-./README.md
-./TASKS.md
-./crates/aicp-adapter-api/Cargo.toml
-./crates/aicp-adapter-api/src/lib.rs
-./crates/aicp-adapter-mock/Cargo.toml
-./crates/aicp-adapter-mock/src/lib.rs
-./crates/aicp-assurance/Cargo.toml
-./crates/aicp-assurance/src/lib.rs
-./crates/aicp-benchmarks/Cargo.toml
-./crates/aicp-benchmarks/benches/pipeline.rs
-./crates/aicp-benchmarks/src/lib.rs
-./crates/aicp-capability/Cargo.toml
-./crates/aicp-capability/src/lib.rs
-./crates/aicp-cli/Cargo.toml
-./crates/aicp-cli/src/main.rs
-./crates/aicp-core/Cargo.toml
-./crates/aicp-core/src/lib.rs
-./crates/aicp-demo/Cargo.toml
-./crates/aicp-demo/src/main.rs
-./crates/aicp-executor/Cargo.toml
-./crates/aicp-executor/src/lib.rs
-./crates/aicp-intent/Cargo.toml
-./crates/aicp-intent/src/lib.rs
-./crates/aicp-planner/Cargo.toml
-./crates/aicp-planner/src/lib.rs
-./docs/ARCHITECTURE.md
-./docs/BENCHMARKS.md
-./examples/intents/low-latency-orders.yaml
-./examples/intents/storage-efficient-archive.yaml
-./scripts/quality_gate.sh
-./scripts/run_demo.sh
+e048fc6cfe131a267ca581e887d81135287ff15e4b6f9cc339361a7375ee16c3  ./.gitignore
+aebf4a1dd7db59aef346615472b1dfda99348644bafee0dcbe1fda35ad495b83  ./CHANGELOG.md
+ef63802fe3de70a5a4f4fcac4b477d133427eb2b4bd41c24d7559bd0188eaec4  ./Cargo.toml
+ddec40c5f8078f83e51296d8bd1a5aa67dba824613c8f25482fdf93230ef26f4  ./LICENSE
+3305b3df3c3663859a4bbf48bb75a0d794506ccdcf03f23bddefb1e17948a6d0  ./README.md
+fbd85c829cc6b96f2c3f01d81c4b6aada15f891578470a581327983670f08462  ./TASKS.md
+880a5f01d0dc7681320c4b9323d38d06ca197cee8225714b839307cb07674b04  ./benchmark-results/aicp-0.1-baseline.json
+ea894b5aa5f2e45a2944be57fe5d1b53540da25be1218cbe5e83f70e68f1fe70  ./benchmark-results/aicp-0.2-baseline.json
+a486d415384a8219bbfd6e5018ffa7217e3dfd8b9eb1491fbe69cb43ba5df7e1  ./benchmark-results/source/AICP_Milestone_0.1.benchmark.txt
+ee1aaddf94ce71c9649041de845c273bb3cd13b72b405c204ab227f7738d457a  ./crates/aicp-adapter-adaptive-db/Cargo.toml
+f8e8d56d51bdeca9c7676d49a17e35b334cef6112c73d71db8c890f68bd24f42  ./crates/aicp-adapter-adaptive-db/src/adapter.rs
+32344441717aea7c91a299ea217a7b89f6220643460eebe63a9cede3e5679ed7  ./crates/aicp-adapter-adaptive-db/src/client.rs
+ac82a62807618d7340d7e667219ee4511ddd235304987ada8ea5e27b2160d456  ./crates/aicp-adapter-adaptive-db/src/in_memory.rs
+bd23db6433f97f003e3fcdce82db58ad0f8c17ebb67ea61be5edcc0efc2115f0  ./crates/aicp-adapter-adaptive-db/src/lib.rs
+5047d0eb14834b386add9ac8a9c6c9dcc51d5d56806c502068d0835b74b4235f  ./crates/aicp-adapter-adaptive-db/src/serialization.rs
+69690abc09824f705c107a9ba44d16626088e1906b0865967bace8c9adcc7506  ./crates/aicp-adapter-api/Cargo.toml
+2508d51ea898cf617a153896f88156288e69470cfa6ef154ee9902c42f034d4c  ./crates/aicp-adapter-api/src/error.rs
+860ebea1f92c9ea3339f3e9fc4be6bae0303c614154584ce0bcf58fe3ce009b1  ./crates/aicp-adapter-api/src/lib.rs
+d23e4c37e2c1e92f463e017865c3f37d70de085db36eb10bfeda79d0f998eb18  ./crates/aicp-adapter-api/src/target.rs
+408e38a3851225429e788f2d32174c22d1320d963ea0ca4500467d145642c9de  ./crates/aicp-adapter-mock/Cargo.toml
+6774e6b5b792a39c81df8614de743b08d3ffbc0fd395dad319c085f9a34bfb3d  ./crates/aicp-adapter-mock/src/adapter.rs
+bf6fec84691b5b745094aa32cee386503b320c5326f9d82879cb68ae7e4ea18b  ./crates/aicp-adapter-mock/src/lib.rs
+183aa40973e118a871722e2b63f3ee6fae2494adce4a6c5b4861e773f6f8a2a3  ./crates/aicp-assurance/Cargo.toml
+ed1374f238c1097e123bb554dd9ab72a7ef9e4b5eac32147d7fc92aae4bfcb1a  ./crates/aicp-assurance/src/drift.rs
+c24fb982d844a4fdd04d39faf0e48432d84382f1910dd9ab654f2d469b5614ef  ./crates/aicp-assurance/src/evaluator.rs
+7e5243f7c55dbf7e5cdfb1f8d13b5e79caa826688a2b216a7b0799d188641d02  ./crates/aicp-assurance/src/lib.rs
+38d88d509e5add6d8aab3097cd7f92c1f9c645059fedaa85f1491305521abd32  ./crates/aicp-benchmark-report/Cargo.toml
+440bf877498d651b3093228184d8d2d76de940752c23d5abf81ccd5db6771342  ./crates/aicp-benchmark-report/src/classification.rs
+92829a951662e2f9a3acf68e1f6f6368b559193d0daaabb2a086745ed6e6be4f  ./crates/aicp-benchmark-report/src/lib.rs
+73dcba9d981bd57066a76ee58c2045603cb9f1979bcd0567474ade776ecd4e09  ./crates/aicp-benchmark-report/src/model.rs
+3380c8a86d45a95d9c7676f852f50d146621de778337f5e79bedc23ac294c7e7  ./crates/aicp-benchmark-report/src/writer.rs
+c6ff6d868d7440e5ad6329fafcda1ec81f4ebc1aca4f22cf33fed329ef5f641b  ./crates/aicp-benchmarks/Cargo.toml
+a8e92c401fdd12b7417a77948f45e7b1d761721a8a5ddb31a24eb5b193ef385d  ./crates/aicp-benchmarks/benches/pipeline.rs
+4dd7f6f768b264c0e4358c266e6a560f431d0017caf4908d99535e17fe4af4f6  ./crates/aicp-benchmarks/src/bin/criterion_to_json.rs
+ba7d825c843a21c691cbe7259287123f46053d6e1f5597cf92833aaf38480c3f  ./crates/aicp-benchmarks/src/bin/export_json.rs
+037826d0401b3158048598d27d2b8cc860a5520756603004656cee203fdeca8c  ./crates/aicp-benchmarks/src/fixtures.rs
+7a3485f46904a08dd23a80a7349c6313a6912a7290c857417845a079c08aace2  ./crates/aicp-benchmarks/src/lib.rs
+bca91253f1daf16df509c510486648ffedb79d7ab5778552b9ee3bd41bdd6038  ./crates/aicp-capability/Cargo.toml
+9bdbdb4f3d684abbd84e52865eff5b31152881757b3c0f0a58d4898ed81e8270  ./crates/aicp-capability/src/lib.rs
+cf2f12470521a6a680140a58bc327e5ec704d83056ca1227ff995e017f1eb195  ./crates/aicp-capability/src/model.rs
+e98d85c44d6265c716a8b01148be8fac9bd0f8d6d8f2081fbda2a6d5dfb054b2  ./crates/aicp-capability/src/provider.rs
+da7731c491f43769465b2b7fddd0f27db31a7176e88342531147a05b6b5b19ae  ./crates/aicp-capability/src/registry.rs
+93ddd50fc93c1e4d21be0580b900108c7add725bba63f90187ef453d29b0fa23  ./crates/aicp-cli/Cargo.toml
+46287f0b253277db0ceee10117e40e9d9ed39a79f24e57fa7521cbc730029c52  ./crates/aicp-cli/src/main.rs
+f493f49aeeded1308997c15ecce3e39f572e93b7a2491243fbf9fb362eb4e8f9  ./crates/aicp-core/Cargo.toml
+9d5d949740e9baed4eb625075b84beb92ae6336e51fcb5780309e476a93c76ff  ./crates/aicp-core/src/assurance.rs
+4e078a65d219a6598ce4800d6a2d6abd18e311dbf8257a542e038d06d79d48b1  ./crates/aicp-core/src/engine.rs
+e85e7dd3c7c786d6ddd4775bc54e1c73b456701034319d3f68b0759d9b51c702  ./crates/aicp-core/src/intent.rs
+578865986ed4918e20307bad0d86588e79328b90750763e7c7434827f95078d2  ./crates/aicp-core/src/lib.rs
+dbcf0100532203c7792cfdc7b54df2bb9f7de929c38b0aee08e39227f44f138e  ./crates/aicp-core/src/plan.rs
+538facacb41e61b403bdc1f74d81391de1d5aae9cd23194fb8dfb17b223802ef  ./crates/aicp-core/src/telemetry.rs
+8609e7daef27ffcfc7c8efef16f3e817a0823bb32c481deb1992398090285076  ./crates/aicp-cost/Cargo.toml
+4dcfb728a750221027fdfc9f496540f22c6f3e9dbfa98e4e17d082de98cb8caa  ./crates/aicp-cost/src/lib.rs
+b595198b6dc7776e34719d70e6710b632b01d10fb96fa31ce8374c26a6b595aa  ./crates/aicp-cost/src/score.rs
+4bcda8d0bb4d028aa81a377e361c128e8c08d635c6b9a5fa70f4aee3c97cbd18  ./crates/aicp-demo/Cargo.toml
+91d9a7ccc1cd27e728f699041a14886f46bc81f14a674da0894d9d9085d16752  ./crates/aicp-demo/src/main.rs
+c94dfc2459b5817d5bce9a7947d5047bccce50a48bc4b4ff7bb22171535b69b0  ./crates/aicp-executor/Cargo.toml
+b2c2dfcc6e779cdbcd57d6fb899fad2d1a75358e143ae7971b92482450d3c4dc  ./crates/aicp-executor/src/error.rs
+7d5a9e96a98fdc5fd6a4cb075eb8aeb494ded80235e55a7b9b3325869150864c  ./crates/aicp-executor/src/executor.rs
+c8e5c214e23efdf99cbc394f5e84cb9dc10491de8fddbbc6f5e6fcb715d5fbb3  ./crates/aicp-executor/src/lib.rs
+baa9e28137dcf15da96351ed91d040ac62f328e196bd65e49f5a638a8cf8fd0b  ./crates/aicp-intent/Cargo.toml
+321efe3a276eda906c34bf1df3694044b47b3c8212dae6f9fc914ec81aef837f  ./crates/aicp-intent/src/error.rs
+fc91e3517c4b6f069845ffa2d3509db1cf0563ba78cd747117ca48a8f609d6cb  ./crates/aicp-intent/src/lib.rs
+6a187a071c41633bf406ddf7157354dd1fa4843f4750861d4e8e5b8140e0f92e  ./crates/aicp-intent/src/model.rs
+49de589ac0eb5897794b406f5aef6c2e3d587d6e6c217f475ea66b5d8c5eab74  ./crates/aicp-intent/src/parser.rs
+c35c54f9197f27746583da083c24280d1858c082aa94786032eeedbca6b482cb  ./crates/aicp-intent/src/validate.rs
+7c1809a0db5a4e67f6c6b81fa523a7319c408f4f8a678a8cac5e536479e6dd72  ./crates/aicp-plan/Cargo.toml
+515a813a51716c3493dd411f2c23dea3d332baee8c8a9dbe89d40613d78660e9  ./crates/aicp-plan/src/estimate.rs
+fca60c8769bff3a576fa16f3b49b13b25edee8d527489cfefbe1dc9dfe9545ad  ./crates/aicp-plan/src/lib.rs
+119960693eef09747c04c9e3e446d2ed9f7cc59d4cde327c9e50c31b85a597c6  ./crates/aicp-plan/src/receipt.rs
+0316a092f049a236604b4629bfc587a4fa2265e02f71d3af59a51444a99821af  ./crates/aicp-plan/src/validation.rs
+f8307bdde47a3d7f32706b80bd2c276e30ee584dcc7e6d951c62c904abb21275  ./crates/aicp-planner/Cargo.toml
+5f36e8ab316ad1a579cbb543ad704d0045dcfa044a5a08997c79e48cc2a01068  ./crates/aicp-planner/src/adaptation.rs
+152eb843348b02c0b314084f5af62b69e34e2aa2065e81ae6a5ee5e24c0f9b75  ./crates/aicp-planner/src/candidate.rs
+4651eb2f5d55559dd842b6194e688f669ba10009aa9d06fa6302255b9ffdafd3  ./crates/aicp-planner/src/error.rs
+113ee3c40d786fea6d714f10c5059937dbfb7082c61fe29360e36c080cb24506  ./crates/aicp-planner/src/explain.rs
+c62bb07eec3a1b2f30fb3f1a5f4a7fdb92bfef0c5b2cd393d28c6eb709543701  ./crates/aicp-planner/src/feasibility.rs
+79d4e7d3d74ddb4f93a822a22fb373edafd8cff51b41760b9382a48101e62112  ./crates/aicp-planner/src/lib.rs
+72673187370a62ec62568a552ee7f1260bd9e67e7f8f876e798b9c86df131b28  ./crates/aicp-planner/src/planner.rs
+e261f9d25299aa5d63947d5cc6a3a4038526bab5ce13d4ca95a1ea836967e23e  ./crates/aicp-planner/src/result.rs
+007d4206184c1633fb650bb3af3333cff514003fd687891966bbe6c79f8c74eb  ./crates/aicp-state/Cargo.toml
+75b94f827d0bf68b7e39b56781cf00e9b169a2036cfacb388c0a577bec7d0f02  ./crates/aicp-state/src/drift.rs
+d3c1e664c547d2467b238d28b707206af960204056bef24eeebaf2a8081cec6a  ./crates/aicp-state/src/fingerprint.rs
+35c2548668b094606b56a7d8f0f52db6a83f3fbac3ff1728ca56db8480035e93  ./crates/aicp-state/src/lib.rs
+282e699454d7feb159f681ef09771586529fc853a4844fac8b6539d10bb92aa5  ./crates/aicp-state/src/model.rs
+598459b8d3b4d575a8c08663cfdd60b17aa193c413fd749efa97bfbd6353f354  ./crates/aicp-state/src/policy.rs
+d4adcb4fba37181ecf44f88152833b2cd289ec5f99c3e16335b54668f19061ad  ./docs/ARCHITECTURE.md
+6fb51780c4a3ff3784d6f1e24ec5c5557deb6178312c4f74a4cee8a0bc35ec78  ./docs/BENCHMARKS.md
+e225afa65c55d952a60bb29a7c329d55ee1b110d9f04cdd056f1552bc87a02ae  ./docs/REFACTORING.md
+96ecaee17f0d64c4b1cc4ee69c76284f6b0932909ef3de7ea32d0d2b880b3ea6  ./examples/intents/low-latency-orders.yaml
+342bd3420e0765853e8815f1d6d740f3e578468ba702e71d28687e0b934106fa  ./examples/intents/storage-efficient-archive.yaml
+7572483a9439efbb5ba9cec55b0dedfab5934944cb52097080cff4ab268737e7  ./scripts/quality_gate.sh
+c40cc3954bd52ac730fa65697a79d09bf2bd48cf62d90d0c0ec609622e0fc1ff  ./scripts/run_benchmarks_json.sh
+6669bf84343fe5144731b23a6c6355144b7b8060f5d4f16567779281ba6e53d1  ./scripts/run_demo.sh

@@ -1,15 +1,9 @@
 use thiserror::Error;
 
-/// Errors returned by an execution-engine adapter.
-#[derive(Debug, Error, Clone)]
+/// Errors returned by execution-engine adapters.
+#[derive(Debug, Error)]
 pub enum AdapterError {
-    /// The action does not match the adapter or its capabilities.
-    #[error("unsupported action: {0}")]
-    Unsupported(String),
-    /// The engine failed while applying an action.
-    #[error("execution failed: {0}")]
-    Execution(String),
-    /// Best-effort rollback failed.
-    #[error("rollback failed: {0}")]
-    Rollback(String),
+    #[error("unsupported operation: {0}")] Unsupported(String),
+    #[error("engine unavailable: {0}")] Unavailable(String),
+    #[error("execution failed: {0}")] Execution(String),
 }

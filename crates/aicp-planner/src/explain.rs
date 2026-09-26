@@ -1,49 +1,29 @@
 use crate::result::PlanningResult;
-use std::fmt::Write;
 
-/// Produces a human-readable explanation of why a plan was selected.
+/// Produces a ranked explanation including rejected alternatives.
 pub fn explain(result: &PlanningResult) -> String {
-    let mut output = String::new();
-    writeln!(
-        output,
-        "Selected {} ({})",
-        result.selected.strategy_name, result.selected.id
-    )
-    .expect("writing to String must succeed");
-    writeln!(output, "score: {:.3}", result.selected.score)
-        .expect("writing to String must succeed");
-    writeln!(
-        output,
-        "expected p99: {:.1} ms",
-        result.selected.expected.p99_latency_ms
-    )
-    .expect("writing to String must succeed");
-    writeln!(
-        output,
-        "expected cost: {:.1} units\n",
-        result.selected.expected.cost_units
-    )
-    .expect("writing to String must succeed");
-    writeln!(output, "Candidates:").expect("writing to String must succeed");
+    let mut candidates = result.candidates.clone();
+    candidates.sort_by(|a,b| match (a.score,b.score) { (Some(x),Some(y)) => x.total_cmp(&y), (Some(_),None) => std::cmp::Ordering::Less, (None,Some(_)) => std::cmp::Ordering::Greater, (None,None) => a.name.cmp(&b.name) });
+    let mut out = format!("Selected {} ({})
+score: {:.4}
+fingerprint: {}
+expected p99: {:.1} ms
+expected migration cost: {:.1}
 
-    for candidate in &result.candidates {
-        if candidate.feasible {
-            writeln!(
-                output,
-                "- {}: feasible, score {:.3}",
-                candidate.name,
-                candidate.score.expect("feasible candidate must have a score")
-            )
-            .expect("writing to String must succeed");
-        } else {
-            writeln!(
-                output,
-                "- {}: rejected: {}",
-                candidate.name,
-                candidate.rejection_reasons.join("; ")
-            )
-            .expect("writing to String must succeed");
-        }
+Candidate ranking:
+", result.selected.strategy_name, result.selected.id, result.selected.score, result.selected.fingerprint, result.selected.expected.p99_latency_ms, result.selected.expected.migration_cost_units);
+    for (i,c) in candidates.iter().enumerate() { if c.feasible { out.push_str(&format!("#{} {}: feasible score={:.4}
+",i+1,c.name,c.score.unwrap())); } else { out.push_str(&format!("#{} {}: rejected: {}
+",i+1,c.name,c.rejection_reasons.join("; "))); } }
+    out
+}
+
+/// Explains why one named candidate was not selected.
+pub fn why_not(result: &PlanningResult, candidate_name: &str) -> String {
+    match result.candidates.iter().find(|c| c.name == candidate_name) {
+        None => format!("candidate {candidate_name} does not exist"),
+        Some(c) if !c.feasible => format!("{candidate_name} rejected because {}", c.rejection_reasons.join("; ")),
+        Some(c) if c.name == result.selected.strategy_name => format!("{candidate_name} was selected"),
+        Some(c) => format!("{candidate_name} was feasible but score {:.4} was worse than selected {:.4}", c.score.unwrap_or(f64::INFINITY), result.selected.score),
     }
-    output
 }

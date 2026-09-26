@@ -1,58 +1,72 @@
-# AICP 0.1 architecture
+# AICP 0.2.1 Architecture
 
-## Design principle
+## Control-plane invariant
 
-AICP is the **control plane**. AdaptiveDB, ACE and GraphNet are **execution targets**. The control plane must not import implementation details from those engines.
+AICP decides **what should happen**. Execution engines decide **how the engine-specific operation is performed**. Core and planner crates never import AdaptiveDB, ACE or GraphNet implementation APIs.
 
-```mermaid
-flowchart TD
-    I[Intent YAML] --> P[Intent parser]
-    P --> IR[Intent IR]
-    IR --> V[Semantic validator]
-    V --> C[Capability registry]
-    C --> PL[Planner]
-    PL --> CP[Candidate plans]
-    CP --> F[Constraint filter]
-    F --> S[Scoring]
-    S --> EP[Execution plan]
-    EP --> EX[Executor]
-    EX --> ADB[AdaptiveDB adapter]
-    EX --> ACE[ACE adapter]
-    EX --> GN[GraphNet adapter]
-    ADB --> T[Telemetry]
-    ACE --> T
-    GN --> T
-    T --> AS[Assurance]
-    AS -->|violation| PL
+## Safety invariants
+
+1. Hard constraints are evaluated before scoring.
+2. An infeasible plan can never become selected because of a low cost score.
+3. Every mutable execution action has an immutable ID and receipt.
+4. Adapter retries are idempotent for the same `(plan_id, action_id)` pair.
+5. The executor validates every action before mutating an engine.
+6. If a later action fails, earlier actions are rolled back best-effort in reverse order.
+7. AICP does not fabricate successful rollback state when the underlying engine cannot prove it.
+8. Planner fingerprints include intent revision, observed state and selected actions.
+9. Hysteresis is represented explicitly to prevent plan oscillation in future closed-loop execution.
+
+## AdaptiveDB adapter
+
+`AdaptiveDbAdapter<C>` implements the general `IntentTarget` SPI. The generic `AdaptiveDbClient` trait is intentionally narrow:
+
+- `version`,
+- `storage_capabilities`,
+- `observe_datasets`,
+- `set_storage`,
+- `estimate_storage_change`.
+
+A concrete AdaptiveDB FFI or RPC client can implement this trait in a later integration milestone without leaking wire-specific types into AICP.
+
+## 0.2.1 source layout
+
+The 0.2.1 hardening release makes the source layout follow responsibility boundaries while keeping crate boundaries unchanged.
+
+```text
+crates/
+├── aicp-core/src/
+│   ├── lib.rs          # public API index only
+│   ├── intent.rs
+│   ├── engine.rs
+│   ├── plan.rs
+│   ├── telemetry.rs
+│   └── assurance.rs
+├── aicp-state/src/
+│   ├── lib.rs
+│   ├── model.rs
+│   ├── drift.rs
+│   ├── fingerprint.rs
+│   └── policy.rs
+├── aicp-plan/src/
+│   ├── lib.rs
+│   ├── estimate.rs
+│   ├── validation.rs
+│   └── receipt.rs
+├── aicp-planner/src/
+│   ├── lib.rs
+│   ├── candidate.rs
+│   ├── feasibility.rs
+│   ├── planner.rs
+│   ├── adaptation.rs
+│   ├── explain.rs
+│   ├── result.rs
+│   └── error.rs
+└── aicp-adapter-adaptive-db/src/
+    ├── lib.rs
+    ├── client.rs
+    ├── in_memory.rs
+    ├── adapter.rs
+    └── serialization.rs
 ```
 
-## Architectural invariants
-
-1. **Intent is declarative.** Users describe outcomes and boundaries, not concrete engine commands.
-2. **Hard constraints dominate optimization.** A cheap plan that breaks durability or an SLO is infeasible, not merely lower-ranked.
-3. **Planning is separated from execution.** `ExecutionPlan` is immutable and explainable before it is applied.
-4. **Adapters isolate engines.** AICP does not depend on AdaptiveDB/ACE/GraphNet internal modules.
-5. **Unknown is a first-class assurance state.** Missing telemetry must never be interpreted as success.
-6. **Feedback closes the loop.** Runtime violations recommend replanning.
-7. **0.1 is deterministic.** No random/ML decision logic is used except UUID generation for plan identity.
-
-## Milestone 0.1 plan strategies
-
-The planner intentionally generates three transparent baseline candidates:
-
-- `latency-first`: row storage + fast compression + Raft;
-- `balanced-adaptive`: hybrid storage + balanced compression + graph-scoped coordination;
-- `cost-storage-first`: column storage + dense compression + partition coordination.
-
-The estimates are synthetic demo values. They validate the control-plane mechanics, **not** real performance claims about AdaptiveDB, ACE or GraphNet.
-
-## Future replacement points
-
-The following 0.1 components are intentionally replaceable:
-
-- static capability registry → dynamic capability discovery;
-- heuristic candidate generator → optimizer/constraint solver;
-- synthetic cost estimates → calibrated cost model;
-- mock adapters → real ADB/ACE/GraphNet adapters;
-- in-process telemetry → metrics/event ingestion;
-- rule assurance → SLO windows and statistical assurance.
+The same `lib.rs = API index` rule is applied to every other library crate. Internal modules import sibling implementation modules directly; crate-root re-exports exist for consumers, not as an internal dependency mechanism.

@@ -1,7 +1,8 @@
 apiVersion: aicp/v1alpha1
 kind: DataIntent
 metadata:
-  name: low-latency-orders
+  name: orders-low-latency
+  revision: 2
 spec:
   target:
     dataset: orders
@@ -18,3 +19,4 @@ spec:
     minimize:
       - cost
       - latency
+      - migration

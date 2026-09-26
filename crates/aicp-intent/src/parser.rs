@@ -1,45 +1,29 @@
-use crate::{error::IntentError, model::IntentDocument, normalize::normalize, validate::validate_document};
-use aicp_core::IntentIr;
+use crate::{error::IntentError, model::IntentDocument, validate::validate_ir};
+use aicp_core::{Constraints, Goals, IntentIr, Preferences, Target};
 
-/// Decodes YAML into the external intent document without semantic normalization.
-pub fn parse_document(yaml: &str) -> Result<IntentDocument, IntentError> {
-    serde_yaml::from_str(yaml).map_err(IntentError::from)
-}
-
-/// Parses YAML, validates the external document, and returns canonical intent IR.
+/// Parses and normalizes a v1alpha1 YAML document to canonical `IntentIr`.
 pub fn parse_and_normalize(yaml: &str) -> Result<IntentIr, IntentError> {
-    let document = parse_document(yaml)?;
-    validate_document(&document)?;
-    Ok(normalize(document))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::parse_and_normalize;
-    use aicp_core::Durability;
-
-    #[test]
-    /// Verifies a representative YAML document normalizes into canonical IR.
-    fn parses_valid_intent() {
-        let yaml = include_str!("../../../examples/intents/low-latency-orders.yaml");
-        let intent = parse_and_normalize(yaml).unwrap();
-        assert_eq!(intent.target.dataset, "orders");
-        assert_eq!(intent.goals.max_p99_latency_ms, Some(10));
-        assert_eq!(intent.constraints.durability, Some(Durability::Strong));
+    let doc: IntentDocument = serde_yaml::from_str(yaml)?;
+    if doc.api_version != "aicp/v1alpha1" {
+        return Err(IntentError::Semantic(format!("unsupported apiVersion {}", doc.api_version)));
     }
-
-    #[test]
-    /// Verifies an invalid zero latency bound is rejected before planning.
-    fn rejects_zero_latency() {
-        let yaml = concat!(
-            "apiVersion: aicp/v1alpha1\n",
-            "kind: DataIntent\n",
-            "metadata: {name: x}\n",
-            "spec:\n",
-            "  target: {dataset: d}\n",
-            "  goals:\n",
-            "    p99LatencyMs: {max: 0}\n",
-        );
-        assert!(parse_and_normalize(yaml).is_err());
+    if doc.kind != "DataIntent" {
+        return Err(IntentError::Semantic(format!("unsupported kind {}", doc.kind)));
     }
+    let ir = IntentIr {
+        name: doc.metadata.name,
+        revision: doc.metadata.revision,
+        target: Target { dataset: doc.spec.target.dataset },
+        goals: Goals {
+            max_p99_latency_ms: doc.spec.goals.p99_latency_ms.map(|x| x.max),
+            min_availability_percent: doc.spec.goals.availability_percent.map(|x| x.min),
+        },
+        constraints: Constraints {
+            durability: doc.spec.constraints.durability,
+            residency: doc.spec.constraints.residency,
+        },
+        preferences: Preferences { minimize: doc.spec.preferences.minimize },
+    };
+    validate_ir(&ir)?;
+    Ok(ir)
 }
