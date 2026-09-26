@@ -18,18 +18,25 @@ pub(crate) struct Metadata {
     pub(crate) revision: u64,
 }
 
-fn default_revision() -> u64 { 1 }
+fn default_revision() -> u64 {
+    1
+}
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Spec {
     pub(crate) target: TargetDoc,
-    #[serde(default)] pub(crate) goals: GoalsDoc,
-    #[serde(default)] pub(crate) constraints: ConstraintsDoc,
-    #[serde(default)] pub(crate) preferences: PreferencesDoc,
+    #[serde(default)]
+    pub(crate) goals: GoalsDoc,
+    #[serde(default)]
+    pub(crate) constraints: ConstraintsDoc,
+    #[serde(default)]
+    pub(crate) preferences: PreferencesDoc,
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct TargetDoc { pub(crate) dataset: String }
+pub(crate) struct TargetDoc {
+    pub(crate) dataset: String,
+}
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -39,17 +46,23 @@ pub(crate) struct GoalsDoc {
 }
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct MaxDoc<T> { pub(crate) max: T }
+pub(crate) struct MaxDoc<T> {
+    pub(crate) max: T,
+}
 #[derive(Debug, Deserialize)]
-pub(crate) struct MinDoc<T> { pub(crate) min: T }
+pub(crate) struct MinDoc<T> {
+    pub(crate) min: T,
+}
 
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct ConstraintsDoc {
     pub(crate) durability: Option<Durability>,
-    #[serde(default)] pub(crate) residency: Vec<String>,
+    #[serde(default)]
+    pub(crate) residency: Vec<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct PreferencesDoc {
-    #[serde(default)] pub(crate) minimize: Vec<Objective>,
+    #[serde(default)]
+    pub(crate) minimize: Vec<Objective>,
 }

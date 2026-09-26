@@ -71,5 +71,9 @@ pub struct BenchmarkChange {
 /// Performance-change classification used by CI and reports.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum RegressionClass { Improved, Stable, Warning, Regression }
-
+pub enum RegressionClass {
+    Improved,
+    Stable,
+    Warning,
+    Regression,
+}

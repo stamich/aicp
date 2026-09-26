@@ -51,7 +51,9 @@ fn load_baseline(path: &Path) -> Result<HashMap<String, f64>, Box<dyn std::error
         .as_array()
         .ok_or("baseline benchmarks missing")?
     {
-        let Some(name) = item["name"].as_str() else { continue };
+        let Some(name) = item["name"].as_str() else {
+            continue;
+        };
         let mean = item["normalized"]["meanNs"]
             .as_f64()
             .or_else(|| item["raw"]["mean"].as_f64())
@@ -118,7 +120,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if results.is_empty() {
-        return Err("no Criterion estimates found; run cargo bench -p aicp-benchmarks first".into());
+        return Err(
+            "no Criterion estimates found; run cargo bench -p aicp-benchmarks first".into(),
+        );
     }
 
     let report = BenchmarkReport {

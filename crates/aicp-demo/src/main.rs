@@ -15,7 +15,11 @@ use std::collections::HashMap;
 fn main() -> anyhow::Result<()> {
     let yaml = include_str!("../../../examples/intents/low-latency-orders.yaml");
     let intent = parse_and_normalize(yaml)?;
-    let adaptive = AdaptiveDbAdapter::new(InMemoryAdaptiveDbClient::with_dataset("orders", StorageStrategy::Column, 18.0));
+    let adaptive = AdaptiveDbAdapter::new(InMemoryAdaptiveDbClient::with_dataset(
+        "orders",
+        StorageStrategy::Column,
+        18.0,
+    ));
     let initial = adaptive.observe()?;
     println!("=== INITIAL ADAPTIVEDB STATE ===\n{initial:#?}\n");
 
@@ -25,16 +29,39 @@ fn main() -> anyhow::Result<()> {
     let mut adapters: HashMap<EngineKind, Box<dyn IntentTarget>> = HashMap::new();
     adapters.insert(EngineKind::AdaptiveDb, Box::new(adaptive));
     adapters.insert(EngineKind::Ace, Box::new(MockAdapter::new(EngineKind::Ace)));
-    adapters.insert(EngineKind::GraphNet, Box::new(MockAdapter::new(EngineKind::GraphNet)));
+    adapters.insert(
+        EngineKind::GraphNet,
+        Box::new(MockAdapter::new(EngineKind::GraphNet)),
+    );
     let receipts = execute_plan(&result.selected, &mut adapters)?;
     println!("=== EXECUTION RECEIPTS ===\n{receipts:#?}\n");
 
     let adb_state = adapters.get(&EngineKind::AdaptiveDb).unwrap().observe()?;
-    let p99 = adb_state.datasets.iter().find(|x| x.name == "orders").and_then(|x| x.p99_latency_ms);
-    let healthy = TelemetrySnapshot { p99_latency_ms: p99, availability_percent: Some(99.999), strong_durability: Some(true), cost_units: Some(95.0) };
-    println!("=== ASSURANCE AFTER APPLY ===\n{:#?}\n", assure(&intent, &healthy));
+    let p99 = adb_state
+        .datasets
+        .iter()
+        .find(|x| x.name == "orders")
+        .and_then(|x| x.p99_latency_ms);
+    let healthy = TelemetrySnapshot {
+        p99_latency_ms: p99,
+        availability_percent: Some(99.999),
+        strong_durability: Some(true),
+        cost_units: Some(95.0),
+    };
+    println!(
+        "=== ASSURANCE AFTER APPLY ===\n{:#?}\n",
+        assure(&intent, &healthy)
+    );
 
-    let drifted = TelemetrySnapshot { p99_latency_ms: Some(16.0), availability_percent: Some(99.999), strong_durability: Some(true), cost_units: Some(95.0) };
-    println!("=== SIMULATED PERFORMANCE DRIFT ===\n{:#?}", assure(&intent, &drifted));
+    let drifted = TelemetrySnapshot {
+        p99_latency_ms: Some(16.0),
+        availability_percent: Some(99.999),
+        strong_durability: Some(true),
+        cost_units: Some(95.0),
+    };
+    println!(
+        "=== SIMULATED PERFORMANCE DRIFT ===\n{:#?}",
+        assure(&intent, &drifted)
+    );
     Ok(())
 }
