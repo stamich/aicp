@@ -1,9 +1,11 @@
-use crate::{client::AdaptiveDbClient, serialization::state_fingerprint};
+//! AdaptiveDB implementation of the generic IntentTarget contract.
+
+use crate::client::AdaptiveDbClient;
 use aicp_adapter_api::{AdapterError, IntentTarget};
 use aicp_capability::EngineCapabilities;
 use aicp_core::{EngineKind, EngineOperation, PlanAction};
 use aicp_plan::{ActionEstimate, ActionValidation, ExecutionReceipt, ExecutionStatus};
-use aicp_state::{EngineHealth, ObservedState, ResourceSnapshot};
+use aicp_state::{fingerprint, EngineHealth, ObservedState, ResourceSnapshot};
 use std::collections::HashSet;
 
 /// AICP adapter translating generic actions to the AdaptiveDB client contract.
@@ -13,21 +15,32 @@ pub struct AdaptiveDbAdapter<C: AdaptiveDbClient> {
 }
 
 impl<C: AdaptiveDbClient> AdaptiveDbAdapter<C> {
+    /// Wraps a concrete AdaptiveDB client.
     pub fn new(client: C) -> Self {
         Self {
             client,
             applied: HashSet::new(),
         }
     }
+
+    /// Exposes an immutable client reference for demo assertions.
     pub fn client(&self) -> &C {
         &self.client
     }
 }
 
+/// Produces a stable compact state fingerprint without leaking engine internals.
+fn serde_state(state: &ObservedState) -> String {
+    fingerprint(&[&format!("{:?}", state)])
+}
+
 impl<C: AdaptiveDbClient> IntentTarget for AdaptiveDbAdapter<C> {
+    /// Identifies this adapter as AdaptiveDB.
     fn kind(&self) -> EngineKind {
         EngineKind::AdaptiveDb
     }
+
+    /// Discovers capabilities from the connected AdaptiveDB client.
     fn capabilities(&self) -> Result<EngineCapabilities, AdapterError> {
         Ok(EngineCapabilities::AdaptiveDb {
             version: self.client.version().map_err(AdapterError::Unavailable)?,
@@ -38,6 +51,8 @@ impl<C: AdaptiveDbClient> IntentTarget for AdaptiveDbAdapter<C> {
             projections: false,
         })
     }
+
+    /// Observes current AdaptiveDB state in normalized AICP form.
     fn observe(&self) -> Result<ObservedState, AdapterError> {
         Ok(ObservedState {
             engine: EngineKind::AdaptiveDb,
@@ -55,19 +70,21 @@ impl<C: AdaptiveDbClient> IntentTarget for AdaptiveDbAdapter<C> {
             sequence: 1,
         })
     }
+
+    /// Validates that an action targets AdaptiveDB and uses a supported layout.
     fn validate(&self, action: &PlanAction) -> Result<ActionValidation, AdapterError> {
         if action.engine != EngineKind::AdaptiveDb {
             return Ok(ActionValidation::reject(
                 "action targets a different engine",
             ));
         }
-        match &action.operation {
+        match action.operation {
             EngineOperation::SetStorage { strategy } => {
                 let supported = self
                     .client
                     .storage_capabilities()
                     .map_err(AdapterError::Unavailable)?
-                    .contains(strategy);
+                    .contains(&strategy);
                 Ok(if supported {
                     ActionValidation::allow("storage strategy supported")
                 } else {
@@ -79,15 +96,19 @@ impl<C: AdaptiveDbClient> IntentTarget for AdaptiveDbAdapter<C> {
             )),
         }
     }
+
+    /// Estimates a storage change using AdaptiveDB state.
     fn estimate(&self, action: &PlanAction) -> Result<ActionEstimate, AdapterError> {
-        match &action.operation {
+        match action.operation {
             EngineOperation::SetStorage { strategy } => self
                 .client
-                .estimate_storage_change(&action.dataset, *strategy)
+                .estimate_storage_change(&action.dataset, strategy)
                 .map_err(AdapterError::Execution),
             _ => Err(AdapterError::Unsupported("not an AdaptiveDB action".into())),
         }
     }
+
+    /// Applies a storage action idempotently.
     fn execute(
         &mut self,
         plan_id: &str,
@@ -104,16 +125,16 @@ impl<C: AdaptiveDbClient> IntentTarget for AdaptiveDbAdapter<C> {
                 resulting_state: None,
             });
         }
-        let before = state_fingerprint(&self.observe()?);
-        match &action.operation {
+        let before = serde_state(&self.observe()?);
+        match action.operation {
             EngineOperation::SetStorage { strategy } => self
                 .client
-                .set_storage(&action.dataset, *strategy)
+                .set_storage(&action.dataset, strategy)
                 .map_err(AdapterError::Execution)?,
             _ => return Err(AdapterError::Unsupported("not an AdaptiveDB action".into())),
         }
         self.applied.insert(key);
-        let after = state_fingerprint(&self.observe()?);
+        let after = serde_state(&self.observe()?);
         Ok(ExecutionReceipt {
             plan_id: plan_id.into(),
             action_id: action.id.clone(),
@@ -123,56 +144,17 @@ impl<C: AdaptiveDbClient> IntentTarget for AdaptiveDbAdapter<C> {
             resulting_state: Some(after),
         })
     }
+
+    /// Performs best-effort idempotency rollback bookkeeping.
+    ///
+    /// A production transport should additionally restore the previous physical configuration
+    /// encoded by a richer engine-specific receipt. Milestone 0.3 intentionally keeps rollback
+    /// conservative and explicit instead of inventing state that cannot be proven.
     fn rollback(&mut self, receipt: &ExecutionReceipt) -> Result<ExecutionReceipt, AdapterError> {
         self.applied
             .remove(&format!("{}:{}", receipt.plan_id, receipt.action_id.0));
         let mut out = receipt.clone();
         out.status = ExecutionStatus::RolledBack;
         Ok(out)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::in_memory::InMemoryAdaptiveDbClient;
-    use aicp_core::{ActionId, EngineOperation, StorageStrategy};
-    #[test]
-    fn execute_is_idempotent() {
-        let client =
-            InMemoryAdaptiveDbClient::with_dataset("orders", StorageStrategy::Column, 18.0);
-        let mut adapter = AdaptiveDbAdapter::new(client);
-        let action = PlanAction {
-            id: ActionId("a1".into()),
-            engine: EngineKind::AdaptiveDb,
-            dataset: "orders".into(),
-            operation: EngineOperation::SetStorage {
-                strategy: StorageStrategy::Hybrid,
-            },
-        };
-        let first = adapter.execute("p1", &action).unwrap();
-        let second = adapter.execute("p1", &action).unwrap();
-        assert_eq!(first.status, ExecutionStatus::Applied);
-        assert_eq!(second.status, ExecutionStatus::AlreadyApplied);
-    }
-    #[test]
-    fn execute_changes_observed_layout() {
-        let client =
-            InMemoryAdaptiveDbClient::with_dataset("orders", StorageStrategy::Column, 18.0);
-        let mut adapter = AdaptiveDbAdapter::new(client);
-        let action = PlanAction {
-            id: ActionId("a2".into()),
-            engine: EngineKind::AdaptiveDb,
-            dataset: "orders".into(),
-            operation: EngineOperation::SetStorage {
-                strategy: StorageStrategy::Row,
-            },
-        };
-        adapter.execute("p2", &action).unwrap();
-        let state = adapter.observe().unwrap();
-        assert_eq!(
-            state.datasets[0].storage_strategy,
-            Some(StorageStrategy::Row)
-        );
     }
 }

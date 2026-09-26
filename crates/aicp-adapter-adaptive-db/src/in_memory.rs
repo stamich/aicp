@@ -1,3 +1,5 @@
+//! Deterministic in-memory AdaptiveDB client.
+
 use crate::client::AdaptiveDbClient;
 use aicp_core::StorageStrategy;
 use aicp_plan::ActionEstimate;
@@ -5,6 +7,9 @@ use aicp_state::DatasetState;
 use std::collections::HashMap;
 
 /// Executable local AdaptiveDB client used by demo and tests.
+///
+/// It models the same contract a future FFI/RPC implementation must satisfy and therefore
+/// exercises the actual AICP adapter instead of bypassing it with a mock adapter.
 pub struct InMemoryAdaptiveDbClient {
     version: String,
     datasets: HashMap<String, DatasetState>,
@@ -32,9 +37,12 @@ impl InMemoryAdaptiveDbClient {
 }
 
 impl AdaptiveDbClient for InMemoryAdaptiveDbClient {
+    /// Returns the contract version.
     fn version(&self) -> Result<String, String> {
         Ok(self.version.clone())
     }
+
+    /// Reports layouts available in the local demo client.
     fn storage_capabilities(&self) -> Result<Vec<StorageStrategy>, String> {
         Ok(vec![
             StorageStrategy::Row,
@@ -42,9 +50,13 @@ impl AdaptiveDbClient for InMemoryAdaptiveDbClient {
             StorageStrategy::Hybrid,
         ])
     }
+
+    /// Returns a copy of current dataset state.
     fn observe_datasets(&self) -> Result<Vec<DatasetState>, String> {
         Ok(self.datasets.values().cloned().collect())
     }
+
+    /// Applies a physical layout and updates the demo latency model.
     fn set_storage(&mut self, dataset: &str, strategy: StorageStrategy) -> Result<(), String> {
         let state = self
             .datasets
@@ -58,6 +70,8 @@ impl AdaptiveDbClient for InMemoryAdaptiveDbClient {
         });
         Ok(())
     }
+
+    /// Estimates migration cost and latency impact from the current layout.
     fn estimate_storage_change(
         &self,
         dataset: &str,
