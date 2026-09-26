@@ -1,4 +1,4 @@
-//! Standalone end-to-end demonstration of the AICP 0.1 closed control loop.
+//! Standalone end-to-end demonstration of the AICP 1.1 closed control loop.
 
 use aicp_assurance::assure;
 use aicp_capability::CapabilityRegistry;
@@ -7,11 +7,11 @@ use aicp_intent::parse_and_normalize;
 use aicp_planner::{explain, plan};
 use anyhow::Result;
 
-/// Runs the complete milestone-0.1 demonstration against an embedded example intent.
+/// Runs the complete baseline demonstration against an embedded example intent.
 fn main() -> Result<()> {
     let yaml = include_str!("../../../examples/intents/low-latency-orders.yaml");
     let intent = parse_and_normalize(yaml)?;
-    let registry = CapabilityRegistry::milestone_0_1();
+    let registry = CapabilityRegistry::baseline();
     let planned = plan(&intent, &registry)?;
 
     println!("AICP 0.1 — closed-loop demo\n");
@@ -43,10 +43,7 @@ fn main() -> Result<()> {
 
     if report.recommend_replan {
         let replanned = plan(&intent, &registry)?;
-        println!(
-            "\n5) Replan generated: {}",
-            replanned.selected.strategy_name
-        );
+        println!("\n5) Replan generated: {}", replanned.selected.strategy_name);
     }
     Ok(())
 }
