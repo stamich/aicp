@@ -1,11 +1,13 @@
-pub mod assurance;
-pub mod engine;
+//! Public API façade. Implementation lives in responsibility-focused modules.
+
 pub mod intent;
+pub mod engine;
 pub mod plan;
 pub mod telemetry;
+pub mod assurance;
 
-pub use assurance::{AssuranceReport, AssuranceStatus};
-pub use engine::{CompressionProfile, CoordinationStrategy, EngineKind, EngineOperation, StorageStrategy};
-pub use intent::{Constraints, Durability, Goals, IntentIr, Objective, Preferences, Target};
-pub use plan::{ActionId, CandidatePlan, ExecutionPlan, PlanAction, PlanEstimate};
-pub use telemetry::TelemetrySnapshot;
+pub use intent::*;
+pub use engine::*;
+pub use plan::*;
+pub use telemetry::*;
+pub use assurance::*;
