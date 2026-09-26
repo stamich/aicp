@@ -1,0 +1,8 @@
+[package]
+name = "aicp-benchmark-compare"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+aicp-benchmark-model = { path = "../aicp-benchmark-model" }
