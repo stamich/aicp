@@ -1,3 +1,7 @@
-pub mod score;
+//! Public API façade. Implementation lives in responsibility-focused modules.
 
-pub use score::{relative_improvement, score};
+pub mod score;
+pub mod vector;
+
+pub use score::*;
+pub use vector::*;

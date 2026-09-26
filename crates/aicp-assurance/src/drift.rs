@@ -1,3 +1,5 @@
+//! Conversion of assurance violations into drift records.
+
 use aicp_core::{AssuranceReport, AssuranceStatus};
 use aicp_state::Drift;
 

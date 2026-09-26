@@ -1,3 +1,5 @@
+//! Versioned engine capability documents.
+
 use aicp_core::{CompressionProfile, CoordinationStrategy, EngineKind, StorageStrategy};
 use serde::{Deserialize, Serialize};
 
@@ -5,15 +7,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "engine", rename_all = "snake_case")]
 pub enum EngineCapabilities {
+    /// AdaptiveDB capabilities.
     AdaptiveDb {
         version: String,
         storage: Vec<StorageStrategy>,
         projections: bool,
     },
+    /// ACE capabilities.
     Ace {
         version: String,
         profiles: Vec<CompressionProfile>,
     },
+    /// GraphNet capabilities.
     GraphNet {
         version: String,
         coordination: Vec<CoordinationStrategy>,

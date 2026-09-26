@@ -1,5 +1,7 @@
+//! Public API façade. Implementation lives in responsibility-focused modules.
+
 pub mod drift;
 pub mod evaluator;
 
-pub use drift::drift_from_assurance;
-pub use evaluator::assure;
+pub use drift::*;
+pub use evaluator::*;

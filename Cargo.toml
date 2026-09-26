@@ -6,21 +6,25 @@ members = [
   "crates/aicp-capability",
   "crates/aicp-state",
   "crates/aicp-cost",
+  "crates/aicp-decision",
   "crates/aicp-plan",
   "crates/aicp-planner",
   "crates/aicp-adapter-api",
   "crates/aicp-adapter-mock",
   "crates/aicp-adapter-adaptive-db",
+  "crates/aicp-adapter-ace",
   "crates/aicp-executor",
   "crates/aicp-assurance",
+  "crates/aicp-benchmark-model",
   "crates/aicp-benchmark-report",
+  "crates/aicp-benchmark-compare",
   "crates/aicp-cli",
   "crates/aicp-demo",
   "crates/aicp-benchmarks",
 ]
 
 [workspace.package]
-version = "0.2.1"
+version = "0.3.1"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["AICP contributors"]

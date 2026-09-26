@@ -1,3 +1,5 @@
+//! Execution-engine identifiers and engine-specific strategy enums.
+
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -5,12 +7,16 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EngineKind {
+    /// Adaptive Database execution engine.
     AdaptiveDb,
+    /// Adaptive Compression Engine.
     Ace,
+    /// GraphNet coordination engine.
     GraphNet,
 }
 
 impl fmt::Display for EngineKind {
+    /// Formats an engine identifier for logs and CLI output.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let value = match self {
             Self::AdaptiveDb => "adaptive-db",
@@ -25,8 +31,11 @@ impl fmt::Display for EngineKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StorageStrategy {
+    /// Row-oriented layout optimized for point operations.
     Row,
+    /// Column-oriented layout optimized for scans and compression.
     Column,
+    /// Hybrid layout balancing transactional and analytical access.
     Hybrid,
 }
 
@@ -34,8 +43,11 @@ pub enum StorageStrategy {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CompressionProfile {
+    /// Fast encode/decode profile.
     Fast,
+    /// Balanced general-purpose profile.
     Balanced,
+    /// Storage-efficient profile accepting extra CPU.
     Dense,
 }
 
@@ -43,17 +55,12 @@ pub enum CompressionProfile {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CoordinationStrategy {
+    /// Coordination limited to directly affected entities where permitted.
     Local,
+    /// Partition-scoped coordination.
     Partition,
+    /// Majority-based Raft-style coordination.
     Raft,
+    /// Coordination over an affected graph sub-scope.
     GraphScoped,
-}
-
-/// Typed operations understood by AICP adapters.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum EngineOperation {
-    SetStorage { strategy: StorageStrategy },
-    SetCompression { profile: CompressionProfile },
-    SetCoordination { strategy: CoordinationStrategy },
 }

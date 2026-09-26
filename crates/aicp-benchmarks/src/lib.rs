@@ -1,3 +1,1 @@
-pub mod fixtures;
-
-pub use fixtures::{sample_intent, sample_observed_state};
+//! Benchmark support crate for AICP 0.3.1.

@@ -1,3 +1,5 @@
+//! Semantic validation of normalized intents.
+
 use crate::error::IntentError;
 use aicp_core::IntentIr;
 

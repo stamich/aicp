@@ -1,7 +1,9 @@
+//! Public API façade. Implementation lives in responsibility-focused modules.
+
 pub mod estimate;
 pub mod receipt;
 pub mod validation;
 
-pub use estimate::ActionEstimate;
-pub use receipt::{ExecutionReceipt, ExecutionStatus};
-pub use validation::ActionValidation;
+pub use estimate::*;
+pub use receipt::*;
+pub use validation::*;

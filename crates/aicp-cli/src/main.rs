@@ -1,4 +1,4 @@
-//! Command-line interface for inspecting milestone-0.2.1 intents and plans.
+//! Command-line interface for inspecting milestone-0.3.1 intents and plans.
 
 use aicp_adapter_adaptive_db::{AdaptiveDbAdapter, InMemoryAdaptiveDbClient};
 use aicp_adapter_api::IntentTarget;
@@ -12,14 +12,14 @@ use std::fs;
 
 /// AICP command-line options.
 #[derive(Parser)]
-#[command(name = "aicp", version, about = "Adaptive Intent Control Plane 0.2.1")]
+#[command(name = "aicp", version, about = "Adaptive Intent Control Plane 0.3.1")]
 struct Cli {
     /// Requested subcommand.
     #[command(subcommand)]
     command: Command,
 }
 
-/// Supported milestone-0.2.1 CLI commands.
+/// Supported milestone-0.3.1 CLI commands.
 #[derive(Subcommand)]
 enum Command {
     /// Builds and explains a plan for an intent file.

@@ -1,7 +1,9 @@
+//! YAML parsing and normalization.
+
 use crate::{error::IntentError, model::IntentDocument, validate::validate_ir};
 use aicp_core::{Constraints, Goals, IntentIr, Preferences, Target};
 
-/// Parses and normalizes a v1alpha1 YAML document to canonical `IntentIr`.
+/// Parses and normalizes a v1alpha1 YAML document to canonical IntentIr.
 pub fn parse_and_normalize(yaml: &str) -> Result<IntentIr, IntentError> {
     let doc: IntentDocument = serde_yaml::from_str(yaml)?;
     if doc.api_version != "aicp/v1alpha1" {

@@ -1,6 +1,8 @@
+//! Human-readable plan explanations.
+
 use crate::result::PlanningResult;
 
-/// Produces a ranked explanation including rejected alternatives.
+/// Produces a ranked human-readable explanation including rejected alternatives.
 pub fn explain(result: &PlanningResult) -> String {
     let mut candidates = result.candidates.clone();
     candidates.sort_by(|a, b| match (a.score, b.score) {
@@ -9,45 +11,35 @@ pub fn explain(result: &PlanningResult) -> String {
         (None, Some(_)) => std::cmp::Ordering::Greater,
         (None, None) => a.name.cmp(&b.name),
     });
-    let mut out = format!(
-        "Selected {} ({})
-score: {:.4}
-fingerprint: {}
-expected p99: {:.1} ms
-expected migration cost: {:.1}
-
-Candidate ranking:
-",
-        result.selected.strategy_name,
-        result.selected.id,
-        result.selected.score,
-        result.selected.fingerprint,
-        result.selected.expected.p99_latency_ms,
-        result.selected.expected.migration_cost_units
-    );
+    let mut out = format!("Selected {} ({})\nscore: {:.4}\nfingerprint: {}\nexpected p99: {:.2} ms\nexpected migration cost: {:.1}\n\nCandidate ranking:\n", result.selected.strategy_name, result.selected.id, result.selected.score, result.selected.fingerprint, result.selected.expected.p99_latency_ms, result.selected.expected.migration_cost_units);
     for (i, c) in candidates.iter().enumerate() {
         if c.feasible {
             out.push_str(&format!(
-                "#{} {}: feasible score={:.4}
-",
+                "#{} {}: feasible score={:.4}\n",
                 i + 1,
                 c.name,
                 c.score.unwrap()
             ));
         } else {
             out.push_str(&format!(
-                "#{} {}: rejected: {}
-",
+                "#{} {}: rejected: {}\n",
                 i + 1,
                 c.name,
                 c.rejection_reasons.join("; ")
             ));
         }
     }
+    out.push_str("\nDecision graph:\n");
+    for reason in &result.decision_graph.reasons {
+        out.push_str(&format!(
+            "{} {:?}: {}\n",
+            reason.id.0, reason.kind, reason.message
+        ));
+    }
     out
 }
 
-/// Explains why one named candidate was not selected.
+/// Explains why a named candidate was not selected.
 pub fn why_not(result: &PlanningResult, candidate_name: &str) -> String {
     match result.candidates.iter().find(|c| c.name == candidate_name) {
         None => format!("candidate {candidate_name} does not exist"),

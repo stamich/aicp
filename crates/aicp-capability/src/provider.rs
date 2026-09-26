@@ -1,3 +1,5 @@
+//! Capability discovery provider contract.
+
 use crate::model::EngineCapabilities;
 
 /// Source of dynamically discovered capabilities.

@@ -1,7 +1,9 @@
+//! Internal serde model for the v1alpha1 YAML document.
+
 use aicp_core::{Durability, Objective};
 use serde::Deserialize;
 
-/// Top-level v1alpha1 YAML document used only at the input boundary.
+/// Top-level v1alpha1 YAML document.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct IntentDocument {
@@ -11,6 +13,7 @@ pub(crate) struct IntentDocument {
     pub(crate) spec: Spec,
 }
 
+/// YAML metadata.
 #[derive(Debug, Deserialize)]
 pub(crate) struct Metadata {
     pub(crate) name: String,
@@ -18,10 +21,12 @@ pub(crate) struct Metadata {
     pub(crate) revision: u64,
 }
 
-fn default_revision() -> u64 {
+/// Returns the default first intent revision.
+pub(crate) fn default_revision() -> u64 {
     1
 }
 
+/// YAML specification section.
 #[derive(Debug, Deserialize)]
 pub(crate) struct Spec {
     pub(crate) target: TargetDoc,
@@ -33,11 +38,13 @@ pub(crate) struct Spec {
     pub(crate) preferences: PreferencesDoc,
 }
 
+/// YAML target section.
 #[derive(Debug, Deserialize)]
 pub(crate) struct TargetDoc {
     pub(crate) dataset: String,
 }
 
+/// YAML goals section.
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct GoalsDoc {
@@ -45,15 +52,19 @@ pub(crate) struct GoalsDoc {
     pub(crate) availability_percent: Option<MinDoc<f64>>,
 }
 
+/// Generic maximum wrapper.
 #[derive(Debug, Deserialize)]
 pub(crate) struct MaxDoc<T> {
     pub(crate) max: T,
 }
+
+/// Generic minimum wrapper.
 #[derive(Debug, Deserialize)]
 pub(crate) struct MinDoc<T> {
     pub(crate) min: T,
 }
 
+/// YAML constraints section.
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct ConstraintsDoc {
     pub(crate) durability: Option<Durability>,
@@ -61,6 +72,7 @@ pub(crate) struct ConstraintsDoc {
     pub(crate) residency: Vec<String>,
 }
 
+/// YAML preferences section.
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct PreferencesDoc {
     #[serde(default)]

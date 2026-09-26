@@ -1,3 +1,5 @@
+//! Idempotent plan execution and rollback orchestration.
+
 use crate::error::ExecutorError;
 use aicp_adapter_api::IntentTarget;
 use aicp_core::{EngineKind, ExecutionPlan};
@@ -11,19 +13,23 @@ pub fn execute_plan(
 ) -> Result<Vec<ExecutionReceipt>, ExecutorError> {
     let mut receipts = Vec::new();
     for action in &plan.actions {
-        let validation = adapters
-            .get_mut(&action.engine)
-            .ok_or(ExecutorError::MissingAdapter(action.engine))?
-            .validate(action)?;
+        let validation = {
+            let adapter = adapters
+                .get_mut(&action.engine)
+                .ok_or(ExecutorError::MissingAdapter(action.engine))?;
+            adapter.validate(action)?
+        };
         if !validation.allowed {
             rollback_all(adapters, &receipts);
             return Err(ExecutorError::Validation(validation.reason));
         }
-        match adapters
-            .get_mut(&action.engine)
-            .ok_or(ExecutorError::MissingAdapter(action.engine))?
-            .execute(&plan.id.to_string(), action)
-        {
+        let execution = {
+            let adapter = adapters
+                .get_mut(&action.engine)
+                .ok_or(ExecutorError::MissingAdapter(action.engine))?;
+            adapter.execute(&plan.id.to_string(), action)
+        };
+        match execution {
             Ok(receipt) => receipts.push(receipt),
             Err(error) => {
                 rollback_all(adapters, &receipts);

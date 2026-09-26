@@ -6,14 +6,17 @@ license.workspace = true
 
 [dependencies]
 aicp-adapter-adaptive-db = { path = "../aicp-adapter-adaptive-db" }
+aicp-adapter-ace = { path = "../aicp-adapter-ace" }
 aicp-adapter-api = { path = "../aicp-adapter-api" }
 aicp-assurance = { path = "../aicp-assurance" }
+aicp-benchmark-compare = { path = "../aicp-benchmark-compare" }
+aicp-benchmark-model = { path = "../aicp-benchmark-model" }
 aicp-benchmark-report = { path = "../aicp-benchmark-report" }
 aicp-capability = { path = "../aicp-capability" }
 aicp-core = { path = "../aicp-core" }
+aicp-cost = { path = "../aicp-cost" }
 aicp-intent = { path = "../aicp-intent" }
 aicp-planner = { path = "../aicp-planner" }
-aicp-state = { path = "../aicp-state" }
 criterion.workspace = true
 serde_json.workspace = true
 

@@ -1,18 +1,21 @@
-use crate::error::PlannerError;
+//! Hard-constraint, capability and adaptation-budget feasibility checks.
+
+use crate::{budget::AdaptationBudget, error::PlannerError};
 use aicp_capability::{CapabilityRegistry, EngineCapabilities};
 use aicp_core::{CandidatePlan, Durability, EngineKind, EngineOperation, IntentIr, PlanAction};
 
-/// Applies hard intent and capability constraints.
+/// Applies intent, capability and adaptation-budget constraints.
 pub(crate) fn evaluate_feasibility(
     intent: &IntentIr,
     candidate: &mut CandidatePlan,
     registry: &CapabilityRegistry,
+    adaptation_budget: AdaptationBudget,
 ) {
     candidate.rejection_reasons.clear();
     if let Some(max) = intent.goals.max_p99_latency_ms {
         if candidate.estimate.p99_latency_ms > max as f64 {
             candidate.rejection_reasons.push(format!(
-                "p99 {:.1}ms exceeds {}ms",
+                "p99 {:.2}ms exceeds {}ms",
                 candidate.estimate.p99_latency_ms, max
             ));
         }
@@ -32,6 +35,12 @@ pub(crate) fn evaluate_feasibility(
             .rejection_reasons
             .push("strong durability would be violated".into());
     }
+    if candidate.estimate.migration_cost_units > adaptation_budget.max_migration_cost_units {
+        candidate.rejection_reasons.push(format!(
+            "migration cost {:.1} exceeds budget {:.1}",
+            candidate.estimate.migration_cost_units, adaptation_budget.max_migration_cost_units
+        ));
+    }
     for action in &candidate.actions {
         if !operation_supported(action, registry) {
             candidate.rejection_reasons.push(format!(
@@ -43,6 +52,7 @@ pub(crate) fn evaluate_feasibility(
     candidate.feasible = candidate.rejection_reasons.is_empty();
 }
 
+/// Checks operation support against the current capability registry.
 fn operation_supported(action: &PlanAction, registry: &CapabilityRegistry) -> bool {
     match (&action.operation, registry.get(action.engine)) {
         (
@@ -61,7 +71,7 @@ fn operation_supported(action: &PlanAction, registry: &CapabilityRegistry) -> bo
     }
 }
 
-/// Ensures every engine required by generated plans is represented.
+/// Ensures every execution engine referenced by generated plans is represented.
 pub(crate) fn ensure_required_capabilities(
     registry: &CapabilityRegistry,
 ) -> Result<(), PlannerError> {
