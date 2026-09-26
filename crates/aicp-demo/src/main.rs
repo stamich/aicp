@@ -1,49 +1,40 @@
-//! Standalone end-to-end demonstration of the AICP 1.1 closed control loop.
+//! End-to-end AICP 0.2.1 demonstration.
 
+use aicp_adapter_adaptive_db::{AdaptiveDbAdapter, InMemoryAdaptiveDbClient};
+use aicp_adapter_api::IntentTarget;
+use aicp_adapter_mock::MockAdapter;
 use aicp_assurance::assure;
 use aicp_capability::CapabilityRegistry;
-use aicp_core::TelemetrySnapshot;
+use aicp_core::{EngineKind, StorageStrategy, TelemetrySnapshot};
+use aicp_executor::execute_plan;
 use aicp_intent::parse_and_normalize;
 use aicp_planner::{explain, plan};
-use anyhow::Result;
+use std::collections::HashMap;
 
-/// Runs the complete baseline demonstration against an embedded example intent.
-fn main() -> Result<()> {
+/// Demonstrates observe -> plan -> explain -> execute -> assure -> detect violation.
+fn main() -> anyhow::Result<()> {
     let yaml = include_str!("../../../examples/intents/low-latency-orders.yaml");
     let intent = parse_and_normalize(yaml)?;
-    let registry = CapabilityRegistry::baseline();
-    let planned = plan(&intent, &registry)?;
+    let adaptive = AdaptiveDbAdapter::new(InMemoryAdaptiveDbClient::with_dataset("orders", StorageStrategy::Column, 18.0));
+    let initial = adaptive.observe()?;
+    println!("=== INITIAL ADAPTIVEDB STATE ===\n{initial:#?}\n");
 
-    println!("AICP 0.1 — closed-loop demo\n");
-    println!(
-        "1) Intent parsed: {} -> {}",
-        intent.name, intent.target.dataset
-    );
-    println!("\n2) Planning\n{}", explain(&planned));
+    let result = plan(&intent, &CapabilityRegistry::baseline(), Some(&initial))?;
+    println!("=== PLAN ===\n{}", explain(&result));
 
-    let (adapters, log) = aicp_adapter_mock::standard_mock_adapters();
-    let receipt = aicp_executor::execute(&planned.selected, &adapters)?;
-    println!("3) Execution: {} actions applied", receipt.applied_actions);
-    for entry in log.entries() {
-        println!("   {entry}");
-    }
+    let mut adapters: HashMap<EngineKind, Box<dyn IntentTarget>> = HashMap::new();
+    adapters.insert(EngineKind::AdaptiveDb, Box::new(adaptive));
+    adapters.insert(EngineKind::Ace, Box::new(MockAdapter::new(EngineKind::Ace)));
+    adapters.insert(EngineKind::GraphNet, Box::new(MockAdapter::new(EngineKind::GraphNet)));
+    let receipts = execute_plan(&result.selected, &mut adapters)?;
+    println!("=== EXECUTION RECEIPTS ===\n{receipts:#?}\n");
 
-    let observed = TelemetrySnapshot {
-        p99_latency_ms: Some(15.0),
-        availability_percent: Some(99.999),
-        strong_durability: Some(true),
-        cost_units: Some(planned.selected.expected.cost_units),
-    };
-    let report = assure(&intent, &observed);
-    println!("\n4) Assurance: {:?}", report.status);
-    for reason in &report.reasons {
-        println!("   - {reason}");
-    }
-    println!("   recommend replan: {}", report.recommend_replan);
+    let adb_state = adapters.get(&EngineKind::AdaptiveDb).unwrap().observe()?;
+    let p99 = adb_state.datasets.iter().find(|x| x.name == "orders").and_then(|x| x.p99_latency_ms);
+    let healthy = TelemetrySnapshot { p99_latency_ms: p99, availability_percent: Some(99.999), strong_durability: Some(true), cost_units: Some(95.0) };
+    println!("=== ASSURANCE AFTER APPLY ===\n{:#?}\n", assure(&intent, &healthy));
 
-    if report.recommend_replan {
-        let replanned = plan(&intent, &registry)?;
-        println!("\n5) Replan generated: {}", replanned.selected.strategy_name);
-    }
+    let drifted = TelemetrySnapshot { p99_latency_ms: Some(16.0), availability_percent: Some(99.999), strong_durability: Some(true), cost_units: Some(95.0) };
+    println!("=== SIMULATED PERFORMANCE DRIFT ===\n{:#?}", assure(&intent, &drifted));
     Ok(())
 }

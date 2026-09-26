@@ -1,16 +1,17 @@
 [package]
-name="aicp-demo"
-version.workspace=true
-edition.workspace=true
-license.workspace=true
-rust-version.workspace=true
+name = "aicp-demo"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
-anyhow.workspace=true
-aicp-intent={path="../aicp-intent"}
-aicp-capability={path="../aicp-capability"}
-aicp-planner={path="../aicp-planner"}
-aicp-adapter-mock={path="../aicp-adapter-mock"}
-aicp-executor={path="../aicp-executor"}
-aicp-assurance={path="../aicp-assurance"}
-aicp-core={path="../aicp-core"}
+aicp-adapter-adaptive-db = { path = "../aicp-adapter-adaptive-db" }
+aicp-adapter-api = { path = "../aicp-adapter-api" }
+aicp-adapter-mock = { path = "../aicp-adapter-mock" }
+aicp-assurance = { path = "../aicp-assurance" }
+aicp-capability = { path = "../aicp-capability" }
+aicp-core = { path = "../aicp-core" }
+aicp-executor = { path = "../aicp-executor" }
+aicp-intent = { path = "../aicp-intent" }
+aicp-planner = { path = "../aicp-planner" }
+anyhow.workspace = true

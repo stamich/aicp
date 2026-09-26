@@ -4,18 +4,23 @@ members = [
   "crates/aicp-core",
   "crates/aicp-intent",
   "crates/aicp-capability",
+  "crates/aicp-state",
+  "crates/aicp-cost",
+  "crates/aicp-plan",
   "crates/aicp-planner",
   "crates/aicp-adapter-api",
   "crates/aicp-adapter-mock",
+  "crates/aicp-adapter-adaptive-db",
   "crates/aicp-executor",
   "crates/aicp-assurance",
+  "crates/aicp-benchmark-report",
   "crates/aicp-cli",
   "crates/aicp-demo",
   "crates/aicp-benchmarks",
 ]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.2.1"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["AICP contributors"]
@@ -28,5 +33,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
+sha2 = "0.10"
 thiserror = "1.0"
+time = { version = "0.3", features = ["formatting", "macros", "serde"] }
 uuid = { version = "1.10", features = ["v4", "serde"] }
