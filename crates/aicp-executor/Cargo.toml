@@ -9,3 +9,7 @@ aicp-adapter-api = { path = "../aicp-adapter-api" }
 aicp-core = { path = "../aicp-core" }
 aicp-plan = { path = "../aicp-plan" }
 thiserror.workspace = true
+
+[dev-dependencies]
+uuid.workspace = true
+aicp-adapter-mock = { path = "../aicp-adapter-mock" }
