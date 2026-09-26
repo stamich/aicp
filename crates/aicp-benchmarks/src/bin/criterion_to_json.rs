@@ -1,12 +1,10 @@
-//! Converts Criterion 0.2.1 run artifacts into the stable AICP JSON benchmark schema.
-//!
-//! Run this binary after `cargo bench -p aicp-benchmarks`. Criterion estimates are
-//! already expressed in nanoseconds; the converter therefore preserves the values
-//! without the erroneous `/ 1000` scaling present in the original 0.2 exporter.
+//! Converts Criterion artifacts to AICP benchmark schema 1.1 without lossy unit conversion.
 
-use aicp_benchmark_report::{
-    classify, write_json, BenchmarkChange, BenchmarkReport, BenchmarkResult, Environment,
+use aicp_benchmark_compare::compare_measurement;
+use aicp_benchmark_model::{
+    BenchmarkReport, BenchmarkResult, NormalizedEstimate, RawEstimate, TimeUnit,
 };
+use aicp_benchmark_report::{collect_environment, write_json};
 use serde_json::Value;
 use std::{
     collections::HashMap,
@@ -14,75 +12,94 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Returns benchmark names emitted by the milestone-0.2.1 Criterion harness.
+/// Benchmarks emitted by the milestone-0.3 harness.
 fn benchmark_names() -> &'static [&'static str] {
     &[
         "intent_parse_normalize",
         "intent_validate_ir",
         "adaptive_db_capability_discovery",
         "adaptive_db_observe_state",
-        "planner_with_observed_state",
-        "assurance_evaluate",
-        "full_in_memory_pipeline",
+        "ace_capability_discovery",
+        "ace_observe_state",
+        "cost_vector_normalization",
+        "planner_adb_ace_4_candidates",
+        "planner_adb_ace_9_candidates",
+        "assurance_satisfied",
+        "assurance_degraded",
+        "assurance_violated",
+        "full_adb_ace_pipeline",
     ]
 }
 
-/// Reads the Criterion mean confidence interval in nanoseconds.
-fn read_estimate(path: &Path) -> Result<(f64, f64, f64), Box<dyn std::error::Error>> {
-    let value: Value = serde_json::from_slice(&fs::read(path)?)?;
-    let mean = &value["mean"];
-    let low = mean["confidence_interval"]["lower_bound"]
-        .as_f64()
-        .ok_or("missing lower_bound")?;
-    let point = mean["point_estimate"]
-        .as_f64()
-        .ok_or("missing point_estimate")?;
-    let high = mean["confidence_interval"]["upper_bound"]
-        .as_f64()
-        .ok_or("missing upper_bound")?;
-    Ok((low, point, high))
+/// Maps comparable 0.3 names to corrected 0.2 baseline names.
+fn baseline_name(name: &str) -> Option<&str> {
+    match name {
+        "intent_parse_normalize" => Some("intent_parse_normalize"),
+        "intent_validate_ir" => Some("intent_validate_ir"),
+        "adaptive_db_capability_discovery" => Some("adaptive_db_capability_discovery"),
+        "adaptive_db_observe_state" => Some("adaptive_db_observe_state"),
+        _ => None,
+    }
 }
 
-/// Loads central 0.2 estimates keyed by benchmark name.
-fn load_baseline(path: &Path) -> Result<HashMap<String, f64>, Box<dyn std::error::Error>> {
+/// Reads Criterion's mean estimate.
+///
+/// Criterion 0.5 stores these time values in nanoseconds. Milestone 0.2 incorrectly divided
+/// them by 1000 while still labelling them `ns`; 0.3 preserves them as raw nanoseconds.
+fn read_estimate(path: &Path) -> Result<RawEstimate, Box<dyn std::error::Error>> {
+    let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+    let mean = &value["mean"];
+    Ok(RawEstimate {
+        low: mean["confidence_interval"]["lower_bound"]
+            .as_f64()
+            .ok_or("missing lower_bound")?,
+        mean: mean["point_estimate"]
+            .as_f64()
+            .ok_or("missing point_estimate")?,
+        high: mean["confidence_interval"]["upper_bound"]
+            .as_f64()
+            .ok_or("missing upper_bound")?,
+        unit: TimeUnit::Nanoseconds,
+    })
+}
+
+/// Loads corrected normalized 0.2 baseline values keyed by benchmark name.
+fn load_baseline(
+    path: &Path,
+) -> Result<HashMap<String, NormalizedEstimate>, Box<dyn std::error::Error>> {
     let value: Value = serde_json::from_slice(&fs::read(path)?)?;
     let mut out = HashMap::new();
     for item in value["benchmarks"]
         .as_array()
         .ok_or("baseline benchmarks missing")?
     {
-        let Some(name) = item["name"].as_str() else {
-            continue;
-        };
-        let mean = item["normalized"]["meanNs"]
-            .as_f64()
-            .or_else(|| item["raw"]["mean"].as_f64())
-            .or_else(|| item["mean"].as_f64());
-        if let Some(mean) = mean {
-            out.insert(name.to_owned(), mean);
+        if let Some(name) = item["name"].as_str() {
+            let normalized = &item["normalized"];
+            if let (Some(low_ns), Some(mean_ns), Some(high_ns)) = (
+                normalized["lowNs"].as_f64(),
+                normalized["meanNs"].as_f64(),
+                normalized["highNs"].as_f64(),
+            ) {
+                out.insert(
+                    name.to_owned(),
+                    NormalizedEstimate {
+                        low_ns,
+                        mean_ns,
+                        high_ns,
+                    },
+                );
+            }
         }
     }
     Ok(out)
 }
 
-/// Builds a best-effort environment description without platform-specific dependencies.
-fn environment() -> Environment {
-    Environment {
-        os: std::env::consts::OS.into(),
-        arch: std::env::consts::ARCH.into(),
-        cpu: std::env::var("AICP_BENCH_CPU").ok(),
-        rust_version: std::env::var("AICP_RUST_VERSION").ok(),
-        profile: "release".into(),
-        git_commit: std::env::var("GIT_COMMIT").ok(),
-    }
-}
-
-/// Converts the most recent Criterion run into `benchmark-results/aicp-0.2.1.json`.
+/// Converts the most recent Criterion run into `benchmark-results/aicp-0.3.1.json`.
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let baseline_path = workspace.join("benchmark-results/aicp-0.2-baseline.json");
+    let baseline =
+        load_baseline(&workspace.join("benchmark-results/aicp-0.2-corrected-baseline.json"))?;
     let criterion_root = workspace.join("target/criterion");
-    let baseline = load_baseline(&baseline_path)?;
     let mut results = Vec::new();
 
     for name in benchmark_names() {
@@ -94,28 +111,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
             continue;
         }
-        let (low, mean, high) = read_estimate(&estimate_path)?;
-        let change = baseline.get(*name).map(|old| {
-            let percent = if *old <= f64::EPSILON {
-                0.0
-            } else {
-                (mean - *old) / *old * 100.0
-            };
-            BenchmarkChange {
-                baseline: "0.2".into(),
-                percent,
-                p_value: None,
-                classification: classify(percent, None),
-            }
-        });
+        let raw = read_estimate(&estimate_path)?;
+        let normalized = raw.normalize_to_ns();
+        let comparison = baseline_name(name)
+            .and_then(|baseline_key| baseline.get(baseline_key))
+            .map(|old| compare_measurement("0.2-corrected", old, &normalized, None, true));
         results.push(BenchmarkResult {
             name: (*name).into(),
-            unit: "ns".into(),
-            low,
-            mean,
-            high,
-            outliers: None,
-            change,
+            raw,
+            normalized,
+            comparison,
         });
     }
 
@@ -124,15 +129,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "no Criterion estimates found; run cargo bench -p aicp-benchmarks first".into(),
         );
     }
-
     let report = BenchmarkReport {
-        schema_version: "1.0".into(),
+        schema_version: "1.1".into(),
         project: "AICP".into(),
-        milestone: "0.2.1".into(),
-        environment: environment(),
+        milestone: "0.3.1".into(),
+        environment: collect_environment(),
         benchmarks: results,
     };
-    let output = workspace.join("benchmark-results/aicp-0.2.1.json");
+    let output = workspace.join("benchmark-results/aicp-0.3.1.json");
     write_json(&output, &report)?;
     println!("wrote {}", output.display());
     Ok(())
