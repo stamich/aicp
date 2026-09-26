@@ -1,9 +1,11 @@
-pub mod drift;
-pub mod fingerprint;
+//! Public API façade. Implementation lives in responsibility-focused modules.
+
 pub mod model;
 pub mod policy;
+pub mod fingerprint;
+pub mod drift;
 
-pub use drift::{detect_storage_drift, Drift};
-pub use fingerprint::fingerprint;
-pub use model::{DatasetState, EngineHealth, ObservedState, ResourceSnapshot};
-pub use policy::AdaptationPolicy;
+pub use model::*;
+pub use policy::*;
+pub use fingerprint::*;
+pub use drift::*;
