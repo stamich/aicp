@@ -4,7 +4,12 @@ use serde::{Deserialize, Serialize};
 /// Result status of one idempotent adapter action.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ExecutionStatus { Applied, AlreadyApplied, Failed, RolledBack }
+pub enum ExecutionStatus {
+    Applied,
+    AlreadyApplied,
+    Failed,
+    RolledBack,
+}
 
 /// Immutable receipt produced by an engine adapter.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -11,6 +11,10 @@ pub trait IntentTarget {
     fn observe(&self) -> Result<ObservedState, AdapterError>;
     fn validate(&self, action: &PlanAction) -> Result<ActionValidation, AdapterError>;
     fn estimate(&self, action: &PlanAction) -> Result<ActionEstimate, AdapterError>;
-    fn execute(&mut self, plan_id: &str, action: &PlanAction) -> Result<ExecutionReceipt, AdapterError>;
+    fn execute(
+        &mut self,
+        plan_id: &str,
+        action: &PlanAction,
+    ) -> Result<ExecutionReceipt, AdapterError>;
     fn rollback(&mut self, receipt: &ExecutionReceipt) -> Result<ExecutionReceipt, AdapterError>;
 }

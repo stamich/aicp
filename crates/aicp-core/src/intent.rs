@@ -19,7 +19,9 @@ pub struct IntentIr {
 
 /// Logical resource targeted by an intent.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Target { pub dataset: String }
+pub struct Target {
+    pub dataset: String,
+}
 
 /// Measurable outcomes requested by the user.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -37,14 +39,26 @@ pub struct Constraints {
 
 /// Soft objectives used to rank feasible plans.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Preferences { pub minimize: Vec<Objective> }
+pub struct Preferences {
+    pub minimize: Vec<Objective>,
+}
 
 /// Durability levels understood by AICP.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Durability { Strong, Relaxed }
+pub enum Durability {
+    Strong,
+    Relaxed,
+}
 
 /// Optimization objectives supported by the planner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Objective { Cost, Latency, Storage, Cpu, Network, Migration }
+pub enum Objective {
+    Cost,
+    Latency,
+    Storage,
+    Cpu,
+    Network,
+    Migration,
+}

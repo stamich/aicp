@@ -15,7 +15,12 @@ pub enum Drift {
 /// Detects simple configuration drift for an AdaptiveDB dataset.
 pub fn detect_storage_drift(dataset: &DatasetState, expected: StorageStrategy) -> Option<Drift> {
     match dataset.storage_strategy {
-        Some(actual) if actual != expected => Some(Drift::ConfigurationDrift { detail: format!("dataset {} uses {:?}, expected {:?}", dataset.name, actual, expected) }),
+        Some(actual) if actual != expected => Some(Drift::ConfigurationDrift {
+            detail: format!(
+                "dataset {} uses {:?}, expected {:?}",
+                dataset.name, actual, expected
+            ),
+        }),
         _ => None,
     }
 }
@@ -25,7 +30,13 @@ mod tests {
     use super::*;
     #[test]
     fn detects_layout_drift() {
-        let ds = DatasetState { name: "orders".into(), storage_strategy: Some(StorageStrategy::Column), estimated_rows: 1, size_bytes: 1, p99_latency_ms: None };
+        let ds = DatasetState {
+            name: "orders".into(),
+            storage_strategy: Some(StorageStrategy::Column),
+            estimated_rows: 1,
+            size_bytes: 1,
+            p99_latency_ms: None,
+        };
         assert!(detect_storage_drift(&ds, StorageStrategy::Row).is_some());
     }
 }

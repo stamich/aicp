@@ -8,5 +8,9 @@ pub trait AdaptiveDbClient {
     fn storage_capabilities(&self) -> Result<Vec<StorageStrategy>, String>;
     fn observe_datasets(&self) -> Result<Vec<DatasetState>, String>;
     fn set_storage(&mut self, dataset: &str, strategy: StorageStrategy) -> Result<(), String>;
-    fn estimate_storage_change(&self, dataset: &str, strategy: StorageStrategy) -> Result<ActionEstimate, String>;
+    fn estimate_storage_change(
+        &self,
+        dataset: &str,
+        strategy: StorageStrategy,
+    ) -> Result<ActionEstimate, String>;
 }
