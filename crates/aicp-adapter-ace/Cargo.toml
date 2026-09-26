@@ -1,0 +1,13 @@
+[package]
+name = "aicp-adapter-ace"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+aicp-adapter-api = { path = "../aicp-adapter-api" }
+aicp-capability = { path = "../aicp-capability" }
+aicp-core = { path = "../aicp-core" }
+aicp-plan = { path = "../aicp-plan" }
+aicp-state = { path = "../aicp-state" }
+serde.workspace = true
