@@ -1,19 +1,22 @@
 [package]
-name="aicp-benchmarks"
-version.workspace=true
-edition.workspace=true
-license.workspace=true
-rust-version.workspace=true
-publish=false
+name = "aicp-benchmarks"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
-aicp-core={path="../aicp-core"}
-aicp-intent={path="../aicp-intent"}
-aicp-capability={path="../aicp-capability"}
-aicp-planner={path="../aicp-planner"}
-aicp-assurance={path="../aicp-assurance"}
-criterion.workspace=true
+aicp-adapter-adaptive-db = { path = "../aicp-adapter-adaptive-db" }
+aicp-adapter-api = { path = "../aicp-adapter-api" }
+aicp-assurance = { path = "../aicp-assurance" }
+aicp-benchmark-report = { path = "../aicp-benchmark-report" }
+aicp-capability = { path = "../aicp-capability" }
+aicp-core = { path = "../aicp-core" }
+aicp-intent = { path = "../aicp-intent" }
+aicp-planner = { path = "../aicp-planner" }
+aicp-state = { path = "../aicp-state" }
+criterion.workspace = true
+serde_json.workspace = true
 
 [[bench]]
-name="pipeline"
-harness=false
+name = "pipeline"
+harness = false
