@@ -82,8 +82,3 @@ The runner executes Criterion and then writes the current run to `benchmark-resu
 ## AdaptiveDB integration boundary
 
 The milestone does not hard-code an AdaptiveDB wire protocol that may change between AdaptiveDB milestones. Instead, `AdaptiveDbClient` is the stable boundary. `InMemoryAdaptiveDbClient` makes the repository runnable today; the production FFI/RPC implementation plugs into the same trait without changing AICP core/planner code.
-
-
-## 0.2.1 structural refactor
-
-Every library crate now treats `src/lib.rs` as a public API index only. `lib.rs` contains `pub mod` declarations and `pub use` re-exports; implementation, domain types, helpers, and tests live in responsibility-oriented module files. This keeps the public import surface stable while aligning the repository with SOLID, KISS, DRY and YAGNI. See `docs/REFACTORING.md`.
