@@ -1,0 +1,36 @@
+Running benches/pipeline.rs (target/release/deps/pipeline-8de5e81703f2121d)
+Gnuplot not found, using plotters backend
+intent_parse_normalize  time:   [14.802 µs 14.883 µs 14.978 µs]
+                        change: [-8.1479% -7.4948% -6.8948%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 7 outliers among 100 measurements (7.00%)
+  6 (6.00%) high mild
+  1 (1.00%) high severe
+
+intent_validate_ir      time:   [14.520 ns 14.633 ns 14.765 ns]
+                        change: [+1.1681% +2.1562% +3.1342%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 6 outliers among 100 measurements (6.00%)
+  3 (3.00%) high mild
+  3 (3.00%) high severe
+
+planner_three_candidates
+                        time:   [1.7341 µs 1.7455 µs 1.7596 µs]
+                        change: [-0.2775% +0.8544% +1.8061%] (p = 0.12 > 0.05)
+                        No change in performance detected.
+Found 6 outliers among 100 measurements (6.00%)
+  4 (4.00%) high mild
+  2 (2.00%) high severe
+
+assurance_evaluate      time:   [563.10 ns 568.54 ns 576.50 ns]
+                        change: [-2.8446% -1.0452% +0.4493%] (p = 0.24 > 0.05)
+                        No change in performance detected.
+Found 7 outliers among 100 measurements (7.00%)
+  4 (4.00%) high mild
+  3 (3.00%) high severe
+
+full_in_memory_pipeline time:   [18.235 µs 18.428 µs 18.670 µs]
+                        change: [-9.7900% -8.3056% -6.6963%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 5 outliers among 100 measurements (5.00%)
+  5 (5.00%) high severe
