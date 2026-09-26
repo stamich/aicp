@@ -1,10 +1,10 @@
-//! Command-line interface for the AICP 0.1 vertical slice.
+//! Command-line interface for the AICP 1.1 vertical slice.
 
 use aicp_assurance::assure;
 use aicp_capability::CapabilityRegistry;
-use aicp_core::TelemetrySnapshot;
+use aicp_core::{IntentIr, TelemetrySnapshot};
 use aicp_intent::parse_and_normalize;
-use aicp_planner::{explain, plan};
+use aicp_planner::{explain, plan, PlanningResult};
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use std::{fs, path::PathBuf};
@@ -18,7 +18,7 @@ struct Cli {
     command: Command,
 }
 
-/// Supported milestone-0.1 CLI operations.
+/// Supported baseline CLI operations.
 #[derive(Debug, Subcommand)]
 enum Command {
     /// Parses an intent and prints all candidate plans plus the selected plan.
@@ -53,54 +53,63 @@ enum Command {
 
 /// Program entry point.
 fn main() -> Result<()> {
-    let cli = Cli::parse();
-    match cli.command {
-        Command::Plan { intent } => {
-            let (ir, result) = load_and_plan(&intent)?;
-            println!("Intent IR:\n{}", serde_json::to_string_pretty(&ir)?);
-            println!("\n{}", explain(&result));
-        }
-        Command::Explain { intent } => {
-            let (_, result) = load_and_plan(&intent)?;
-            println!("{}", explain(&result));
-        }
-        Command::Apply { intent } => {
-            let (_, result) = load_and_plan(&intent)?;
-            let (adapters, log) = aicp_adapter_mock::standard_mock_adapters();
-            let receipt = aicp_executor::execute(&result.selected, &adapters)?;
-            println!("Applied {} actions", receipt.applied_actions);
-            for entry in log.entries() {
-                println!("{entry}");
-            }
-        }
+    match Cli::parse().command {
+        Command::Plan { intent } => print_plan(&intent),
+        Command::Explain { intent } => print_explanation(&intent),
+        Command::Apply { intent } => apply_plan(&intent),
         Command::Assure {
             intent,
             observed_p99,
-        } => {
-            let yaml = read(&intent)?;
-            let ir = parse_and_normalize(&yaml)?;
-            let report = assure(
-                &ir,
-                &TelemetrySnapshot {
-                    p99_latency_ms: Some(observed_p99),
-                    availability_percent: ir.goals.min_availability_percent,
-                    strong_durability: Some(true),
-                    cost_units: None,
-                },
-            );
-            println!("{}", serde_json::to_string_pretty(&report)?);
-        }
-        Command::Demo { intent } => run_demo(&intent)?,
+        } => print_assurance(&intent, observed_p99),
+        Command::Demo { intent } => run_demo(&intent),
+    }
+}
+
+/// Parses an intent and prints both canonical IR and the planning explanation.
+fn print_plan(path: &PathBuf) -> Result<()> {
+    let (intent, result) = load_and_plan(path)?;
+    println!("Intent IR:\n{}", serde_json::to_string_pretty(&intent)?);
+    println!("\n{}", explain(&result));
+    Ok(())
+}
+
+/// Prints only the human-readable explanation for a selected plan.
+fn print_explanation(path: &PathBuf) -> Result<()> {
+    let (_, result) = load_and_plan(path)?;
+    println!("{}", explain(&result));
+    Ok(())
+}
+
+/// Applies a planned intent to deterministic mock adapters and prints their audit log.
+fn apply_plan(path: &PathBuf) -> Result<()> {
+    let (_, result) = load_and_plan(path)?;
+    let (adapters, log) = aicp_adapter_mock::standard_mock_adapters();
+    let receipt = aicp_executor::execute(&result.selected, &adapters)?;
+    println!("Applied {} actions", receipt.applied_actions);
+    for entry in log.entries() {
+        println!("{entry}");
     }
     Ok(())
 }
 
+/// Evaluates an observed latency value against a parsed intent and prints JSON assurance output.
+fn print_assurance(path: &PathBuf, observed_p99: f64) -> Result<()> {
+    let intent = parse_and_normalize(&read(path)?)?;
+    let observed = TelemetrySnapshot {
+        p99_latency_ms: Some(observed_p99),
+        availability_percent: intent.goals.min_availability_percent,
+        strong_durability: Some(true),
+        cost_units: None,
+    };
+    println!("{}", serde_json::to_string_pretty(&assure(&intent, &observed))?);
+    Ok(())
+}
+
 /// Loads, parses and plans one intent file.
-fn load_and_plan(path: &PathBuf) -> Result<(aicp_core::IntentIr, aicp_planner::PlanningResult)> {
-    let yaml = read(path)?;
-    let ir = parse_and_normalize(&yaml)?;
-    let result = plan(&ir, &CapabilityRegistry::milestone_0_1())?;
-    Ok((ir, result))
+fn load_and_plan(path: &PathBuf) -> Result<(IntentIr, PlanningResult)> {
+    let intent = parse_and_normalize(&read(path)?)?;
+    let result = plan(&intent, &CapabilityRegistry::baseline())?;
+    Ok((intent, result))
 }
 
 /// Reads one UTF-8 intent file with contextual error reporting.
@@ -110,37 +119,32 @@ fn read(path: &PathBuf) -> Result<String> {
 
 /// Runs the complete control-loop demonstration.
 fn run_demo(path: &PathBuf) -> Result<()> {
-    let (ir, result) = load_and_plan(path)?;
+    let (intent, result) = load_and_plan(path)?;
     println!("=== 1. PLAN ===\n{}", explain(&result));
+
     let (adapters, log) = aicp_adapter_mock::standard_mock_adapters();
     let receipt = aicp_executor::execute(&result.selected, &adapters)?;
-    println!(
-        "=== 2. APPLY ===\nApplied {} actions",
-        receipt.applied_actions
-    );
+    println!("=== 2. APPLY ===\nApplied {} actions", receipt.applied_actions);
     for entry in log.entries() {
         println!("{entry}");
     }
-    let violating = ir
+
+    let violating_latency = intent
         .goals
         .max_p99_latency_ms
-        .map(|v| v as f64 + 5.0)
+        .map(|value| value as f64 + 5.0)
         .unwrap_or(15.0);
-    let report = assure(
-        &ir,
-        &TelemetrySnapshot {
-            p99_latency_ms: Some(violating),
-            availability_percent: Some(99.999),
-            strong_durability: Some(true),
-            cost_units: Some(result.selected.expected.cost_units),
-        },
-    );
-    println!(
-        "\n=== 3. ASSURANCE ===\n{}",
-        serde_json::to_string_pretty(&report)?
-    );
+    let observed = TelemetrySnapshot {
+        p99_latency_ms: Some(violating_latency),
+        availability_percent: Some(99.999),
+        strong_durability: Some(true),
+        cost_units: Some(result.selected.expected.cost_units),
+    };
+    let report = assure(&intent, &observed);
+    println!("\n=== 3. ASSURANCE ===\n{}", serde_json::to_string_pretty(&report)?);
+
     if report.recommend_replan {
-        let replanned = plan(&ir, &CapabilityRegistry::milestone_0_1())?;
+        let replanned = plan(&intent, &CapabilityRegistry::baseline())?;
         println!("\n=== 4. REPLAN RECOMMENDED ===\n{}", explain(&replanned));
     }
     Ok(())
