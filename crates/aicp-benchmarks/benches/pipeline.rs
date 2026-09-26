@@ -1,8 +1,7 @@
-//! Criterion benchmarks for the AICP 0.1 in-memory control-plane path.
+//! Criterion benchmarks for the AICP 1.1 refactored in-memory control-plane path.
 
 use aicp_assurance::assure;
-use aicp_capability::CapabilityRegistry;
-use aicp_core::TelemetrySnapshot;
+use aicp_benchmarks::{benchmark_registry, benchmark_telemetry};
 use aicp_intent::{parse_and_normalize, validate_ir};
 use aicp_planner::plan;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -11,13 +10,8 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 fn benchmarks(c: &mut Criterion) {
     let yaml = include_str!("../../../examples/intents/low-latency-orders.yaml");
     let intent = parse_and_normalize(yaml).expect("embedded benchmark intent must be valid");
-    let registry = CapabilityRegistry::milestone_0_1();
-    let telemetry = TelemetrySnapshot {
-        p99_latency_ms: Some(9.0),
-        availability_percent: Some(99.999),
-        strong_durability: Some(true),
-        cost_units: Some(100.0),
-    };
+    let registry = benchmark_registry();
+    let telemetry = benchmark_telemetry();
 
     c.bench_function("intent_parse_normalize", |b| {
         b.iter(|| parse_and_normalize(black_box(yaml)).unwrap())
@@ -33,10 +27,10 @@ fn benchmarks(c: &mut Criterion) {
     });
     c.bench_function("full_in_memory_pipeline", |b| {
         b.iter(|| {
-            let ir = parse_and_normalize(black_box(yaml)).unwrap();
-            validate_ir(&ir).unwrap();
-            let planned = plan(&ir, &registry).unwrap();
-            let report = assure(&ir, &telemetry);
+            let intent = parse_and_normalize(black_box(yaml)).unwrap();
+            validate_ir(&intent).unwrap();
+            let planned = plan(&intent, &registry).unwrap();
+            let report = assure(&intent, &telemetry);
             black_box((planned, report))
         })
     });
