@@ -1,11 +1,12 @@
 [package]
-name="aicp-adapter-api"
-version.workspace=true
-edition.workspace=true
-license.workspace=true
-rust-version.workspace=true
+name = "aicp-adapter-api"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [dependencies]
-aicp-core={path="../aicp-core"}
-aicp-capability={path="../aicp-capability"}
-thiserror.workspace=true
+aicp-capability = { path = "../aicp-capability" }
+aicp-core = { path = "../aicp-core" }
+aicp-plan = { path = "../aicp-plan" }
+aicp-state = { path = "../aicp-state" }
+thiserror.workspace = true
