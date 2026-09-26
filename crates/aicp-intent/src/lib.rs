@@ -1,8 +1,10 @@
+//! Public API façade. Implementation lives in responsibility-focused modules.
+
 pub mod error;
 pub mod model;
 pub mod parser;
 pub mod validate;
 
-pub use error::IntentError;
-pub use parser::parse_and_normalize;
-pub use validate::validate_ir;
+pub use error::*;
+pub use parser::*;
+pub use validate::*;
