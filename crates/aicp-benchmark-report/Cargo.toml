@@ -5,5 +5,5 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-serde.workspace = true
+aicp-benchmark-model = { path = "../aicp-benchmark-model" }
 serde_json.workspace = true
