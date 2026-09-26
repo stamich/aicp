@@ -1,45 +1,50 @@
 # Changelog
 
-## 0.2.1
-
-### Refactored
-- Reserved every library `src/lib.rs` for `pub mod` declarations and `pub use` re-exports only.
-- Split `aicp-core` into intent, engine, plan, telemetry and assurance modules.
-- Split planner orchestration, candidate generation, feasibility, adaptation, explanations, result and error concerns.
-- Split runtime state into model, drift, fingerprint and adaptation-policy modules.
-- Split plan receipts, validation and estimates.
-- Split AdaptiveDB transport contract, in-memory client, adapter and state serialization.
-- Split benchmark report model, classification and writer.
-- Replaced milestone-specific `CapabilityRegistry::milestone_0_2()` with neutral `CapabilityRegistry::baseline()`.
-- Reworked assurance evaluation to track hard violations explicitly instead of inferring semantics from human-readable strings.
-- Added a structural quality gate for `lib.rs` API-index compliance.
-- Fixed the 0.2 benchmark JSON exporter unit bug and added the corrected 0.2 baseline for 0.2.1 comparisons.
-
-### Compatibility
-- Public crate-level imports are preserved through re-exports wherever possible.
-- Planning, execution, assurance and benchmark behavior remain milestone-0.2 compatible.
-
-## 0.2.0
-
-### Added
-- Observed state, engine health, dataset state and drift models.
-- Adaptation hysteresis/cooldown policy.
-- Intent revision and stable action IDs.
-- Migration-aware cost objective and plan estimates.
-- Versioned dynamic capability provider contract.
-- Adapter SPI v2 with observe/validate/estimate/idempotent execute/rollback.
-- AdaptiveDB adapter with transport-neutral `AdaptiveDbClient` contract.
-- Executable in-memory AdaptiveDB client for demo and integration tests.
-- Immutable execution receipts and plan fingerprints.
-- `Degraded` assurance state.
-- Ranked plan explanation and why-not reasoning.
-- Versioned benchmark JSON model and 0.1 baseline exporter.
-- Capability discovery, observation and state-aware planner benchmarks.
+## 0.3.1 - Structural refactor
 
 ### Changed
-- Planner now accepts observed state.
-- Executor validates actions before apply and rolls back previous actions after downstream failure.
-- Demo now exercises a concrete AdaptiveDB adapter plus mock ACE/GraphNet adapters.
+- Refactored all library crate roots into API-only façades (`pub mod` / `pub use`; `aicp-intent` keeps one private serde-model module).
+- Moved core intent, engine, plan, telemetry and assurance types into responsibility-specific modules.
+- Split planner orchestration, budgets, candidate generation, feasibility, adaptation, result and explanations.
+- Split AdaptiveDB and ACE adapters into client, in-memory implementation, model/adapter responsibilities.
+- Split benchmark schema, comparison and reporting crates into focused modules.
+- Replaced milestone-numbered capability construction in active 0.3.1 code with `baseline()` / `legacy_baseline()`.
+- Removed brittle assurance-status inference based on message text; violations are tracked explicitly.
+- Moved all unit tests from `src/` into crate-local `tests/` integration-test directories.
+- Strengthened `scripts/quality_gate.sh` to reject implementation in `lib.rs` and tests under `src/`.
+- Updated workspace version and benchmark output identity to 0.3.1.
+
+### Compatibility
+- Retains milestone 0.3 planning, AdaptiveDB/ACE adapter, decision graph, executor, assurance and benchmark semantics.
+- Public crate-root imports remain available through re-exports.
+
+
+## 0.3.0
+
+### Benchmark correctness
+- Fixed the 0.2 Criterion unit-conversion bug.
+- Added benchmark schema 1.1 with raw and normalized nanosecond estimates.
+- Added suspicious-scale detection and environment compatibility checks.
+- Added best-effort OS/arch/CPU/rustc/cargo/Git environment fingerprinting.
+- Hardened assurance benchmarks with `black_box` inputs and outputs and separate status paths.
+- Added an auditable corrected 0.2 baseline while retaining the supplied original JSON.
+
+### Cross-engine planning
+- Added transport-neutral `AceClient` and `AceAdapter`.
+- Added ACE capability discovery, observation, estimation and idempotent execution.
+- Added shared `CostVector` and normalization.
+- Added AdaptiveDB × ACE candidate generation.
+- Added deterministic candidate pruning, `PlanningBudget` and `AdaptationBudget`.
+- Added structured decision reason graph.
+- Added ADB+ACE demo and new integration benchmarks.
+
+### Compatibility
+- Existing intent schema remains compatible with 0.2.
+- Existing `IntentTarget` SPI is retained.
+- GraphNet remains mocked and is scheduled for a later milestone.
+
+## 0.2.0
+- Added observed-state planning, drift primitives, AdaptiveDB adapter contract, execution receipts, hysteresis and JSON benchmark export.
 
 ## 0.1.0
-- Initial Intent -> IR -> Validation -> Capabilities -> Planning -> Explain -> Mock Execute -> Assurance vertical slice.
+- Initial vertical slice: intent parsing, validation, capability registry, deterministic planning, mock execution and assurance.

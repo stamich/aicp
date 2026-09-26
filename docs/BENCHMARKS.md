@@ -1,63 +1,43 @@
-# AICP 0.2.1 Benchmarks
+# AICP 0.3.1 benchmark methodology
 
-## 0.1 supplied baseline
+## 0.2 defect
 
-The supplied Criterion output is preserved as the historical baseline:
+The 0.2 Criterion converter assumed source estimates were picoseconds and divided them by 1000, while still writing `unit = ns`. Criterion 0.5's stored estimate values used by this harness are already nanoseconds. Therefore 0.2 JSON values were 1000× too small.
 
-| benchmark | central estimate |
-|---|---:|
-| intent_parse_normalize | 14.883 µs |
-| intent_validate_ir | 14.633 ns |
-| planner_three_candidates | 1.7455 µs |
-| assurance_evaluate | 568.54 ns |
-| full_in_memory_pipeline | 18.428 µs |
+0.3.1 retains the 0.3 corrected behavior and treats the source values as nanoseconds and stores both `raw` and `normalized` forms.
 
-The original run reported a small statistically significant validator change of +2.1562%, stable planner/assurance, and an 8.3056% improvement of the full pipeline relative to its Criterion baseline.
+## Benchmark groups
 
-## 0.2 benchmark groups
+### Micro
 
 - `intent_parse_normalize`
 - `intent_validate_ir`
 - `adaptive_db_capability_discovery`
 - `adaptive_db_observe_state`
-- `planner_with_observed_state`
-- `assurance_evaluate`
-- `full_in_memory_pipeline`
+- `ace_capability_discovery`
+- `ace_observe_state`
+- `cost_vector_normalization`
+- `assurance_satisfied`
+- `assurance_degraded`
+- `assurance_violated`
 
-These deliberately separate parser/validator microbenchmarks from adapter observation and the end-to-end in-memory control-plane path.
+### Planner
 
-## JSON reporting
+- `planner_adb_ace_4_candidates`
+- `planner_adb_ace_9_candidates`
 
-AICP 0.2.1 preserves schema version `1.0` with:
+### End-to-end
 
-- project and milestone,
-- OS and architecture,
-- optional CPU, Rust version and Git commit,
-- low/mean/high estimates,
-- outlier count,
-- baseline percentage and p-value,
-- `improved`, `stable`, `warning`, `regression` classification.
+- `full_adb_ace_pipeline`
 
-Run:
+All benchmark inputs **and outputs** are passed through Criterion `black_box` on critical paths to prevent dead-code elimination from producing implausible measurements.
 
-```bash
-scripts/run_benchmarks_json.sh
-```
+## JSON schema 1.1
 
-A future CI wrapper can parse Criterion's `target/criterion/**/estimates.json` and populate the same `BenchmarkReport` model automatically. Keeping schema generation inside a standalone crate avoids coupling Criterion's internal output layout to the control-plane domain.
+A result contains source values and canonical nanoseconds. Comparisons operate only on `normalized.meanNs`.
 
-## Engineering budgets
+A change exceeding two orders of magnitude is classified `suspicious` until the measurement is inspected.
 
-Initial non-SLA regression budgets for 0.2:
+## Baselines
 
-- parser + normalize: < 30 µs,
-- planner: < 10 µs,
-- assurance: < 2 µs,
-- full in-memory control-plane path: < 100 µs.
-
-These are regression guardrails, not customer-facing SLOs.
-
-
-## 0.2.1 baseline
-
-The refactor compares against `benchmark-results/aicp-0.2-baseline.json`, which contains the corrected 0.2 Criterion nanosecond values. The original 0.2 converter incorrectly divided Criterion estimates by 1000; 0.2.1 removes that conversion.
+`aicp-0.2-corrected-baseline.json` was derived from the supplied `aicp-0.2.json` by reversing the known erroneous `/1000` conversion. The original file is retained under `benchmark-results/source` for auditability.

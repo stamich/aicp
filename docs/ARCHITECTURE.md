@@ -1,72 +1,34 @@
-# AICP 0.2.1 Architecture
+# AICP 0.3.1 architecture
 
-## Control-plane invariant
+0.3.1 keeps the 0.3 runtime architecture and refactors source ownership. See `REFACTORING.md` for the source-module map. Library crate roots are API façades; implementation and tests are separated.
 
-AICP decides **what should happen**. Execution engines decide **how the engine-specific operation is performed**. Core and planner crates never import AdaptiveDB, ACE or GraphNet implementation APIs.
+# AICP 0.3 architecture
 
-## Safety invariants
+## Control-plane boundary
 
-1. Hard constraints are evaluated before scoring.
-2. An infeasible plan can never become selected because of a low cost score.
-3. Every mutable execution action has an immutable ID and receipt.
-4. Adapter retries are idempotent for the same `(plan_id, action_id)` pair.
-5. The executor validates every action before mutating an engine.
-6. If a later action fails, earlier actions are rolled back best-effort in reverse order.
-7. AICP does not fabricate successful rollback state when the underlying engine cannot prove it.
-8. Planner fingerprints include intent revision, observed state and selected actions.
-9. Hysteresis is represented explicitly to prevent plan oscillation in future closed-loop execution.
-
-## AdaptiveDB adapter
-
-`AdaptiveDbAdapter<C>` implements the general `IntentTarget` SPI. The generic `AdaptiveDbClient` trait is intentionally narrow:
-
-- `version`,
-- `storage_capabilities`,
-- `observe_datasets`,
-- `set_storage`,
-- `estimate_storage_change`.
-
-A concrete AdaptiveDB FFI or RPC client can implement this trait in a later integration milestone without leaking wire-specific types into AICP.
-
-## 0.2.1 source layout
-
-The 0.2.1 hardening release makes the source layout follow responsibility boundaries while keeping crate boundaries unchanged.
+AICP owns intent interpretation, constraints, planning, explanation, execution orchestration and assurance. AdaptiveDB and ACE own engine-specific state changes. GraphNet remains mocked in 0.3.
 
 ```text
-crates/
-├── aicp-core/src/
-│   ├── lib.rs          # public API index only
-│   ├── intent.rs
-│   ├── engine.rs
-│   ├── plan.rs
-│   ├── telemetry.rs
-│   └── assurance.rs
-├── aicp-state/src/
-│   ├── lib.rs
-│   ├── model.rs
-│   ├── drift.rs
-│   ├── fingerprint.rs
-│   └── policy.rs
-├── aicp-plan/src/
-│   ├── lib.rs
-│   ├── estimate.rs
-│   ├── validation.rs
-│   └── receipt.rs
-├── aicp-planner/src/
-│   ├── lib.rs
-│   ├── candidate.rs
-│   ├── feasibility.rs
-│   ├── planner.rs
-│   ├── adaptation.rs
-│   ├── explain.rs
-│   ├── result.rs
-│   └── error.rs
-└── aicp-adapter-adaptive-db/src/
-    ├── lib.rs
-    ├── client.rs
-    ├── in_memory.rs
-    ├── adapter.rs
-    └── serialization.rs
+                   Intent / Policy
+                        │
+                        ▼
+                 AICP control plane
+                        │
+      ┌─────────────────┼─────────────────┐
+      ▼                 ▼                 ▼
+AdaptiveDbAdapter    AceAdapter      MockGraphNet
+      │                 │                 │
+AdaptiveDbClient      AceClient        mock state
 ```
 
-The same `lib.rs = API index` rule is applied to every other library crate. Internal modules import sibling implementation modules directly; crate-root re-exports exist for consumers, not as an internal dependency mechanism.
+## Invariants
+
+1. Hard constraints are never traded for a better score.
+2. Raw benchmark units are never compared directly.
+3. Engine internals do not leak into the planner.
+4. Every executed action returns an immutable receipt.
+5. Repeated `(plan_id, action_id)` execution is idempotent at the adapter boundary.
+6. Candidate generation is bounded by `PlanningBudget`.
+7. Migration cost is bounded by `AdaptationBudget`.
+8. Explainability is represented structurally by a decision graph.
+9. AICP 0.3 does not claim production rollback of engine state when the backing engine contract cannot prove restoration semantics.
