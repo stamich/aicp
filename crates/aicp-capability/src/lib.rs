@@ -1,7 +1,9 @@
-pub mod model;
-pub mod provider;
-pub mod registry;
+//! Public API façade. Implementation lives in responsibility-focused modules.
 
-pub use model::EngineCapabilities;
-pub use provider::CapabilityProvider;
-pub use registry::CapabilityRegistry;
+pub mod model;
+pub mod registry;
+pub mod provider;
+
+pub use model::*;
+pub use registry::*;
+pub use provider::*;
