@@ -1,16 +1,18 @@
 apiVersion: aicp/v1alpha1
 kind: DataIntent
 metadata:
-  name: storage-efficient-archive
+  name: archive-storage-efficient
+  revision: 1
 spec:
   target:
     dataset: archive
   goals:
     p99LatencyMs:
-      max: 100
+      max: 50
   constraints:
-    durability: strong
+    durability: relaxed
   preferences:
     minimize:
       - storage
       - cost
+      - migration
