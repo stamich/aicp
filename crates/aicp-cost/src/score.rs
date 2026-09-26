@@ -2,7 +2,11 @@ use aicp_core::{Objective, PlanEstimate, Preferences};
 
 /// Computes a deterministic weighted score for a feasible plan estimate.
 pub fn score(preferences: &Preferences, estimate: &PlanEstimate) -> f64 {
-    let objectives = if preferences.minimize.is_empty() { vec![Objective::Cost] } else { preferences.minimize.clone() };
+    let objectives = if preferences.minimize.is_empty() {
+        vec![Objective::Cost]
+    } else {
+        preferences.minimize.clone()
+    };
     let mut total = 0.0;
     let mut weight_sum = 0.0;
     for (index, objective) in objectives.iter().enumerate() {
@@ -23,5 +27,9 @@ pub fn score(preferences: &Preferences, estimate: &PlanEstimate) -> f64 {
 
 /// Returns the relative improvement from an old score to a new score.
 pub fn relative_improvement(old_score: f64, new_score: f64) -> f64 {
-    if old_score <= f64::EPSILON { 0.0 } else { (old_score - new_score) / old_score }
+    if old_score <= f64::EPSILON {
+        0.0
+    } else {
+        (old_score - new_score) / old_score
+    }
 }

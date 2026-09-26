@@ -8,11 +8,21 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "engine", rename_all = "snake_case")]
 pub enum EngineCapabilities {
     /// AdaptiveDB capabilities.
-    AdaptiveDb { version: String, storage: Vec<StorageStrategy>, projections: bool },
+    AdaptiveDb {
+        version: String,
+        storage: Vec<StorageStrategy>,
+        projections: bool,
+    },
     /// ACE capabilities.
-    Ace { version: String, profiles: Vec<CompressionProfile> },
+    Ace {
+        version: String,
+        profiles: Vec<CompressionProfile>,
+    },
     /// GraphNet capabilities.
-    GraphNet { version: String, coordination: Vec<CoordinationStrategy> },
+    GraphNet {
+        version: String,
+        coordination: Vec<CoordinationStrategy>,
+    },
 }
 
 impl EngineCapabilities {

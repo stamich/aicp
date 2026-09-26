@@ -14,6 +14,9 @@ pub struct AdaptationPolicy {
 impl Default for AdaptationPolicy {
     /// Returns conservative defaults suitable for the demo environment.
     fn default() -> Self {
-        Self { minimum_improvement_ratio: 0.10, cooldown_seconds: 60 }
+        Self {
+            minimum_improvement_ratio: 0.10,
+            cooldown_seconds: 60,
+        }
     }
 }

@@ -22,7 +22,9 @@ pub(crate) struct Metadata {
 }
 
 /// Returns the default first intent revision.
-pub(crate) fn default_revision() -> u64 { 1 }
+pub(crate) fn default_revision() -> u64 {
+    1
+}
 
 /// YAML specification section.
 #[derive(Debug, Deserialize)]
@@ -38,7 +40,9 @@ pub(crate) struct Spec {
 
 /// YAML target section.
 #[derive(Debug, Deserialize)]
-pub(crate) struct TargetDoc { pub(crate) dataset: String }
+pub(crate) struct TargetDoc {
+    pub(crate) dataset: String,
+}
 
 /// YAML goals section.
 #[derive(Debug, Default, Deserialize)]
@@ -50,11 +54,15 @@ pub(crate) struct GoalsDoc {
 
 /// Generic maximum wrapper.
 #[derive(Debug, Deserialize)]
-pub(crate) struct MaxDoc<T> { pub(crate) max: T }
+pub(crate) struct MaxDoc<T> {
+    pub(crate) max: T,
+}
 
 /// Generic minimum wrapper.
 #[derive(Debug, Deserialize)]
-pub(crate) struct MinDoc<T> { pub(crate) min: T }
+pub(crate) struct MinDoc<T> {
+    pub(crate) min: T,
+}
 
 /// YAML constraints section.
 #[derive(Debug, Default, Deserialize)]

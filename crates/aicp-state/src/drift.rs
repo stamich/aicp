@@ -7,7 +7,10 @@ use aicp_core::StorageStrategy;
 pub fn detect_storage_drift(dataset: &DatasetState, expected: StorageStrategy) -> Option<Drift> {
     match dataset.storage_strategy {
         Some(actual) if actual != expected => Some(Drift::ConfigurationDrift {
-            detail: format!("dataset {} uses {:?}, expected {:?}", dataset.name, actual, expected),
+            detail: format!(
+                "dataset {} uses {:?}, expected {:?}",
+                dataset.name, actual, expected
+            ),
         }),
         _ => None,
     }

@@ -1,11 +1,11 @@
 //! Public API façade. Implementation lives in responsibility-focused modules.
 
+pub mod drift;
+pub mod fingerprint;
 pub mod model;
 pub mod policy;
-pub mod fingerprint;
-pub mod drift;
 
+pub use drift::*;
+pub use fingerprint::*;
 pub use model::*;
 pub use policy::*;
-pub use fingerprint::*;
-pub use drift::*;

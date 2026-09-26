@@ -12,24 +12,71 @@ pub struct CapabilityRegistry {
 
 impl CapabilityRegistry {
     /// Creates an empty registry.
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     /// Creates the compatibility baseline retained from the previous milestone.
     pub fn legacy_baseline() -> Self {
         let mut r = Self::new();
-        r.insert(EngineCapabilities::AdaptiveDb { version: "2.x-demo".into(), storage: vec![StorageStrategy::Row, StorageStrategy::Column, StorageStrategy::Hybrid], projections: true });
-        r.insert(EngineCapabilities::Ace { version: "0.1-mock".into(), profiles: vec![CompressionProfile::Fast, CompressionProfile::Balanced, CompressionProfile::Dense] });
-        r.insert(EngineCapabilities::GraphNet { version: "0.x-mock".into(), coordination: vec![CoordinationStrategy::Local, CoordinationStrategy::Partition, CoordinationStrategy::Raft, CoordinationStrategy::GraphScoped] });
+        r.insert(EngineCapabilities::AdaptiveDb {
+            version: "2.x-demo".into(),
+            storage: vec![
+                StorageStrategy::Row,
+                StorageStrategy::Column,
+                StorageStrategy::Hybrid,
+            ],
+            projections: true,
+        });
+        r.insert(EngineCapabilities::Ace {
+            version: "0.1-mock".into(),
+            profiles: vec![
+                CompressionProfile::Fast,
+                CompressionProfile::Balanced,
+                CompressionProfile::Dense,
+            ],
+        });
+        r.insert(EngineCapabilities::GraphNet {
+            version: "0.x-mock".into(),
+            coordination: vec![
+                CoordinationStrategy::Local,
+                CoordinationStrategy::Partition,
+                CoordinationStrategy::Raft,
+                CoordinationStrategy::GraphScoped,
+            ],
+        });
         r
     }
-
 
     /// Creates the current baseline registry with AdaptiveDB and ACE capabilities.
     pub fn baseline() -> Self {
         let mut r = Self::new();
-        r.insert(EngineCapabilities::AdaptiveDb { version: "2.x-contract".into(), storage: vec![StorageStrategy::Row, StorageStrategy::Column, StorageStrategy::Hybrid], projections: true });
-        r.insert(EngineCapabilities::Ace { version: "0.x-contract".into(), profiles: vec![CompressionProfile::Fast, CompressionProfile::Balanced, CompressionProfile::Dense] });
-        r.insert(EngineCapabilities::GraphNet { version: "0.x-mock".into(), coordination: vec![CoordinationStrategy::Local, CoordinationStrategy::Partition, CoordinationStrategy::Raft, CoordinationStrategy::GraphScoped] });
+        r.insert(EngineCapabilities::AdaptiveDb {
+            version: "2.x-contract".into(),
+            storage: vec![
+                StorageStrategy::Row,
+                StorageStrategy::Column,
+                StorageStrategy::Hybrid,
+            ],
+            projections: true,
+        });
+        r.insert(EngineCapabilities::Ace {
+            version: "0.x-contract".into(),
+            profiles: vec![
+                CompressionProfile::Fast,
+                CompressionProfile::Balanced,
+                CompressionProfile::Dense,
+            ],
+        });
+        r.insert(EngineCapabilities::GraphNet {
+            version: "0.x-mock".into(),
+            coordination: vec![
+                CoordinationStrategy::Local,
+                CoordinationStrategy::Partition,
+                CoordinationStrategy::Raft,
+                CoordinationStrategy::GraphScoped,
+            ],
+        });
         r
     }
 
