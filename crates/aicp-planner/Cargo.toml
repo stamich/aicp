@@ -8,6 +8,7 @@ license.workspace = true
 aicp-capability = { path = "../aicp-capability" }
 aicp-core = { path = "../aicp-core" }
 aicp-cost = { path = "../aicp-cost" }
+aicp-decision = { path = "../aicp-decision" }
 aicp-state = { path = "../aicp-state" }
 thiserror.workspace = true
 uuid.workspace = true
