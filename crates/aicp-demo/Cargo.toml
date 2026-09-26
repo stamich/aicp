@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 aicp-adapter-adaptive-db = { path = "../aicp-adapter-adaptive-db" }
+aicp-adapter-ace = { path = "../aicp-adapter-ace" }
 aicp-adapter-api = { path = "../aicp-adapter-api" }
 aicp-adapter-mock = { path = "../aicp-adapter-mock" }
 aicp-assurance = { path = "../aicp-assurance" }
