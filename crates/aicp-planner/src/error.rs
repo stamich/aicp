@@ -1,13 +1,9 @@
 use aicp_core::EngineKind;
 use thiserror::Error;
 
-/// Planner failures that prevent an execution plan from being selected.
+/// Planner failures that cannot safely be converted into a plan.
 #[derive(Debug, Error)]
 pub enum PlannerError {
-    /// No feasible candidate satisfies the hard constraints.
-    #[error("no feasible plan satisfies the intent constraints")]
-    NoFeasiblePlan,
-    /// Required engine capabilities are missing.
-    #[error("missing capabilities for engine {0}")]
-    MissingCapabilities(EngineKind),
+    #[error("missing capabilities for {0}")] MissingCapabilities(EngineKind),
+    #[error("no feasible plan")] NoFeasiblePlan,
 }

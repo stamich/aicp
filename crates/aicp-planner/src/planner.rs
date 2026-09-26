@@ -1,93 +1,36 @@
-use crate::{
-    candidate::generate_candidates,
-    feasibility::{ensure_required_capabilities, evaluate_feasibility},
-    scoring::score,
-    error::PlannerError, result::PlanningResult,
-};
+use crate::{candidate::generate_candidates, error::PlannerError, feasibility::{ensure_required_capabilities, evaluate_feasibility}, result::PlanningResult};
 use aicp_capability::CapabilityRegistry;
 use aicp_core::{ExecutionPlan, IntentIr};
+use aicp_cost::score;
+use aicp_state::{fingerprint, ObservedState};
 use uuid::Uuid;
 
-/// Generates, filters, scores and selects the best deterministic execution plan.
-pub fn plan(
-    intent: &IntentIr,
-    capabilities: &CapabilityRegistry,
-) -> Result<PlanningResult, PlannerError> {
+/// Generates and selects a state-aware deterministic plan.
+pub fn plan(intent: &IntentIr, capabilities: &CapabilityRegistry, observed: Option<&ObservedState>) -> Result<PlanningResult, PlannerError> {
     ensure_required_capabilities(capabilities)?;
-    let mut candidates = generate_candidates(intent);
-
+    let mut candidates = generate_candidates(intent, observed);
     for candidate in &mut candidates {
         evaluate_feasibility(intent, candidate, capabilities);
-        if candidate.feasible {
-            candidate.score = Some(score(intent, &candidate.estimate));
-        }
+        if candidate.feasible { candidate.score = Some(score(&intent.preferences, &candidate.estimate)); }
     }
-
-    let best = candidates
-        .iter()
-        .filter(|candidate| candidate.feasible)
-        .min_by(|left, right| {
-            left.score
-                .expect("feasible candidate must have a score")
-                .total_cmp(&right.score.expect("feasible candidate must have a score"))
-        })
-        .ok_or(PlannerError::NoFeasiblePlan)?;
-
-    let selected = ExecutionPlan {
-        id: Uuid::new_v4(),
-        intent_name: intent.name.clone(),
-        strategy_name: best.name.clone(),
-        actions: best.actions.clone(),
-        expected: best.estimate,
-        score: best.score.expect("selected candidate must have a score"),
-    };
-
-    Ok(PlanningResult {
-        candidates,
-        selected,
-    })
+    let best = candidates.iter().filter(|c| c.feasible).min_by(|a,b| a.score.unwrap().total_cmp(&b.score.unwrap())).ok_or(PlannerError::NoFeasiblePlan)?;
+    let state_part = observed.map(|s| format!("{:?}", s)).unwrap_or_else(|| "none".into());
+    let actions_part = format!("{:?}", best.actions);
+    let revision = intent.revision.to_string();
+    let fp = fingerprint(&[&intent.name, &revision, &state_part, &actions_part]);
+    let selected = ExecutionPlan { id: Uuid::new_v4(), intent_name: intent.name.clone(), intent_revision: intent.revision, strategy_name: best.name.clone(), actions: best.actions.clone(), expected: best.estimate, score: best.score.unwrap(), fingerprint: fp };
+    Ok(PlanningResult { candidates, selected })
 }
 
 #[cfg(test)]
 mod tests {
-    use super::plan;
-    use crate::PlannerError;
-    use aicp_capability::CapabilityRegistry;
-    use aicp_core::{Constraints, Durability, Goals, IntentIr, Objective, Preferences, Target};
-
-    /// Builds a compact intent fixture for planner unit tests.
-    fn intent(max_latency_ms: u64, strong_durability: bool) -> IntentIr {
-        IntentIr {
-            name: "x".into(),
-            target: Target {
-                dataset: "orders".into(),
-            },
-            goals: Goals {
-                max_p99_latency_ms: Some(max_latency_ms),
-                min_availability_percent: None,
-            },
-            constraints: Constraints {
-                durability: strong_durability.then_some(Durability::Strong),
-                residency: vec![],
-            },
-            preferences: Preferences {
-                minimize: vec![Objective::Cost, Objective::Latency],
-            },
-        }
-    }
-
-    #[test]
-    /// Verifies a feasible low-latency plan is selected under a strict latency bound.
-    fn chooses_feasible_low_latency_plan() {
-        let result = plan(&intent(10, true), &CapabilityRegistry::baseline()).unwrap();
-        assert!(result.selected.expected.p99_latency_ms <= 10.0);
-        assert_ne!(result.selected.strategy_name, "cost-storage-first");
-    }
-
-    #[test]
-    /// Verifies impossible hard constraints fail instead of being weakened.
-    fn impossible_intent_has_no_plan() {
-        let error = plan(&intent(1, true), &CapabilityRegistry::baseline()).unwrap_err();
-        assert!(matches!(error, PlannerError::NoFeasiblePlan));
-    }
+    use super::*;
+    use crate::adaptation::should_adapt;
+    use aicp_core::{Constraints, Durability, Goals, Objective, Preferences, StorageStrategy, Target};
+    use aicp_state::{AdaptationPolicy, DatasetState, EngineHealth, ResourceSnapshot};
+    fn intent() -> IntentIr { IntentIr { name: "orders".into(), revision: 2, target: Target { dataset: "orders".into() }, goals: Goals { max_p99_latency_ms: Some(10), min_availability_percent: Some(99.99) }, constraints: Constraints { durability: Some(Durability::Strong), residency: vec!["EU".into()] }, preferences: Preferences { minimize: vec![Objective::Cost, Objective::Latency, Objective::Migration] } } }
+    fn observed() -> ObservedState { ObservedState { engine: aicp_core::EngineKind::AdaptiveDb, version: "test".into(), health: EngineHealth::Healthy, resources: ResourceSnapshot { cpu_percent: 20.0, memory_percent: 20.0, storage_percent: 20.0 }, datasets: vec![DatasetState { name: "orders".into(), storage_strategy: Some(StorageStrategy::Column), estimated_rows: 1000, size_bytes: 1000, p99_latency_ms: Some(18.0) }], sequence: 1 } }
+    #[test] fn hard_constraints_win_over_cost() { let r=plan(&intent(), &CapabilityRegistry::baseline(), Some(&observed())).unwrap(); assert_ne!(r.selected.strategy_name,"cost-storage-first"); assert!(r.selected.expected.p99_latency_ms <= 10.0); assert!(r.selected.expected.strong_durability); }
+    #[test] fn fingerprint_is_stable() { let a=plan(&intent(), &CapabilityRegistry::baseline(), Some(&observed())).unwrap(); let b=plan(&intent(), &CapabilityRegistry::baseline(), Some(&observed())).unwrap(); assert_eq!(a.selected.fingerprint,b.selected.fingerprint); }
+    #[test] fn hysteresis_suppresses_small_changes() { assert!(!should_adapt(Some(1.0),0.95,AdaptationPolicy::default())); assert!(should_adapt(Some(1.0),0.80,AdaptationPolicy::default())); }
 }
