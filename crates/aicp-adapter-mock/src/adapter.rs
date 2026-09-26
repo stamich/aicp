@@ -1,3 +1,5 @@
+//! Simple in-memory mock adapter.
+
 use aicp_adapter_api::{AdapterError, IntentTarget};
 use aicp_capability::EngineCapabilities;
 use aicp_core::{CompressionProfile, CoordinationStrategy, EngineKind, PlanAction};
